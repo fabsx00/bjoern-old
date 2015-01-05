@@ -10,25 +10,20 @@ using namespace std;
 
 class BjoernNode{
 protected:
-	unsigned long long id;
 	string type;
 
 public:
-	void setId(unsigned long long anId)
-	{
-		id = anId;
-	}
-	
+  	
 };
 
-class BjoernFunction : public BjoernNode {
+class BjoernFunctionNode : public BjoernNode {
 private:	
 	string name;
 	string addr;
 
 public:
   
-	BjoernFunction()
+	BjoernFunctionNode()
 	{
 		type = "FunctionDef";
 	}

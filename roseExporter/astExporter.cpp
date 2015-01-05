@@ -12,6 +12,8 @@
 #include <BinaryCallingConvention.h>
 
 #include "bjoernNodes.hpp"
+#include "bjoernFunction.hpp"
+#include "CSVWriter.hpp"
 
 using namespace rose;
 using namespace rose::BinaryAnalysis;
@@ -20,14 +22,17 @@ using namespace std;
 
 class MyProcessor : public SgSimpleProcessing
 {
-private:
-	list<BjoernFunction *> functions;
-	unsigned long long curId = 0;
+private:	
+	CSVWriter writer;
 public:
-	MyProcessor()
-	{
-		
-	}
+	MyProcessor() { }
+
+	/**
+	   Called for each node of the "binary AST"
+	   We only check whether the node is a function
+	   node and then manually walk the tree from there.
+	   That's not too efficient but shouldn't cause trouble.
+	*/
 	
 	void visit(SgNode *node)
 	{		
@@ -41,17 +46,18 @@ public:
 	void visitFunction(SgAsmFunction *func)
 	{
 				
-		BjoernFunction *funcNode = createBjoernFuncFromSgFunc(func);					
-		functions.push_back(funcNode);		
+		BjoernFunction *bjoernFunc = createBjoernFuncFromSgFunc(func);					
+		visitStatements(func, bjoernFunc);
+		
+		writer.writeFunction(bjoernFunc);
+		delete bjoernFunc;
 	}
 
 	BjoernFunction *createBjoernFuncFromSgFunc(SgAsmFunction *func)
 	{
-		BjoernFunction *funcNode = new BjoernFunction();
-		funcNode->setId(curId);
-		curId++;
-
-		if(!funcNode)
+		BjoernFunction *bjoernFunc = new BjoernFunction();		
+		
+		if(!bjoernFunc)
 			throw runtime_error("Out of memory");
 		
 		/* Initialize name and address */
@@ -61,14 +67,20 @@ public:
 		assert(entryBlock != NULL);		
 		rose_addr_t entryAddr = entryBlock->get_address();
 		
-		funcNode->setName(name);
-		funcNode->setAddr(entryAddr);
-
-		/* Initialize statement nodes */
+		bjoernFunc->setName(name);
+		bjoernFunc->setAddr(entryAddr);
 		
-		SgAsmStatementPtrList statements = func->get_statementList();				
+		
 		SgSymbolTable * symbolTable = func->get_symbol_table();
-		
+						
+		return bjoernFunc;
+	}
+	
+	
+	void visitStatements(SgAsmFunction *func, BjoernFunction *funcNode)
+	{
+				
+		SgAsmStatementPtrList statements = func->get_statementList();				
 		
 		for(size_t i = 0; i < statements.size(); i++){
 			SgAsmBlock *block = dynamic_cast<SgAsmBlock *>(statements[i]);			
@@ -77,15 +89,7 @@ public:
 			for(size_t j = 0; j < successors.size(); j++){
 				cout << successors[j] << endl;
 			}
-		}	
-
-		return funcNode;
-	}
-	
-
-	void visitStatements(SgAsmStatementPtrList &statements, SgAsmFunction *func)
-	{
-		/* ... */
+		}
 	}
 
 
