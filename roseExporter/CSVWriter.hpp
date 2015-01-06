@@ -1,7 +1,7 @@
 #ifndef _CSV_WRITER_HPP
 #define _CSV_WRITER_HPP
 
-#include "bjoernFunction.hpp"
+#include "bjoernNodes.hpp"
 
 class CSVWriter
 {
@@ -12,7 +12,7 @@ private:
 public:
   CSVWriter() : curId(0) {} 
 
-  void writeFunction(BjoernFunction *func);
+  void writeFunction(BjoernFunctionNode *func);
 
 };
 

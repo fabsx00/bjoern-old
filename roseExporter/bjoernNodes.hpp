@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <list>
 
 #include <stdint.h>
 
@@ -11,27 +12,8 @@ using namespace std;
 class BjoernNode{
 protected:
 	string type;
-
-public:
-  	
-};
-
-class BjoernFunctionNode : public BjoernNode {
-private:	
-	string name;
 	string addr;
-
 public:
-  
-	BjoernFunctionNode()
-	{
-		type = "FunctionDef";
-	}
-	
-	void setName(string &aName)
-	{
-		name = aName;
-	}
 
 	void setAddr(uint64_t anAddr)
 	{
@@ -39,7 +21,41 @@ public:
 		convert << (uint64_t) anAddr;
 		addr = convert.str();
 	}
-	
+
+};
+
+class BjoernBasicBlockNode : public BjoernNode {
+public:
+	BjoernBasicBlockNode()
+	{
+		type = "BasicBlock";
+	}
+};
+
+class BjoernFunctionNode : public BjoernNode {
+private:
+	string name;
+	list<BjoernBasicBlockNode *> basicBlocks;
+public:
+
+	BjoernFunctionNode()
+	{
+		type = "FunctionDef";
+	}
+
+	void setName(string &aName)
+	{
+		name = aName;
+	}
+
+};
+
+class BjoernInstructionNode : public BjoernNode {
+public:
+	BjoernInstructionNode()
+	{
+		type = "Instruction";
+	}
 };
 
 #endif

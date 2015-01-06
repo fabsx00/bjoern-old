@@ -12,7 +12,6 @@
 #include <BinaryCallingConvention.h>
 
 #include "bjoernNodes.hpp"
-#include "bjoernFunction.hpp"
 #include "CSVWriter.hpp"
 
 using namespace rose;
@@ -44,16 +43,16 @@ public:
 	void visitFunction(SgAsmFunction *func)
 	{
 
-		BjoernFunction *bjoernFunc = createBjoernFuncFromSgFunc(func);
+		BjoernFunctionNode *bjoernFunc = createBjoernFuncFromSgFunc(func);
 		visitStatements(func, bjoernFunc);
 
 		writer.writeFunction(bjoernFunc);
 		delete bjoernFunc;
 	}
 
-	BjoernFunction *createBjoernFuncFromSgFunc(SgAsmFunction *func)
+	BjoernFunctionNode *createBjoernFuncFromSgFunc(SgAsmFunction *func)
 	{
-		BjoernFunction *bjoernFunc = new BjoernFunction();
+		BjoernFunctionNode *bjoernFunc = new BjoernFunctionNode();
 
 		if(!bjoernFunc)
 			throw runtime_error("Out of memory");
@@ -75,7 +74,7 @@ public:
 	}
 
 
-	void visitStatements(SgAsmFunction *func, BjoernFunction *bjoernFunc)
+	void visitStatements(SgAsmFunction *func, BjoernFunctionNode *bjoernFunc)
 	{
 
 		SgAsmStatementPtrList statements = func->get_statementList();
@@ -97,7 +96,7 @@ public:
 		}
 	}
 
-	void visitBlock(SgAsmBlock *block, BjoernFunction *bjoernFunc)
+	void visitBlock(SgAsmBlock *block, BjoernFunctionNode *bjoernFunc)
 	{
 		SgAsmStatementPtrList blockStmts = block->get_statementList();
 		for(size_t j = 0; j < blockStmts.size(); j++){
@@ -105,7 +104,6 @@ public:
 			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
 			if(instr)
 				AsmUnparser().unparse(std::cout, instr);
-
 		}
 	}
 
