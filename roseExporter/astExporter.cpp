@@ -99,15 +99,10 @@ public:
 
 	void visitBlock(SgAsmBlock *block, BjoernFunctionNode *bjoernFunc)
 	{
+		// create and add basic block to function
+
 		BjoernBasicBlockNode *basicBlock = createBjoernBasicBlockFromSgBlock(block);
 		bjoernFunc->addBasicBlock(basicBlock);
-
-		SgAsmStatementPtrList blockStmts = block->get_statementList();
-		for(size_t j = 0; j < blockStmts.size(); j++){
-			SgAsmStatement *stmt = blockStmts[j];
-			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
-			visitInstruction(instr, bjoernFunc);
-		}
 
 	}
 
@@ -124,19 +119,36 @@ public:
 			basicBlock->addSuccessor(successors[j]->get_value());
 		}
 
+
+		// iterate over set of instructions in basic block
+
+		SgAsmStatementPtrList blockStmts = block->get_statementList();
+		for(size_t j = 0; j < blockStmts.size(); j++){
+			SgAsmStatement *stmt = blockStmts[j];
+			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
+			if(!instr)
+				continue;
+
+			BjoernInstructionNode *instrNode = createBjoernInstructionFromSgInstruction(instr);
+			basicBlock->addInstruction(instrNode);
+		}
+
 		return basicBlock;
 	}
 
-	/**
-	   Called for each instruction
-	 */
-
-	void visitInstruction(SgAsmInstruction *instr, BjoernFunctionNode *bjoernFunc)
+	BjoernInstructionNode *createBjoernInstructionFromSgInstruction(SgAsmInstruction *instr)
 	{
-		if(instr)
-			AsmUnparser().unparse(std::cout, instr);
-	}
+		BjoernInstructionNode *instrNode = new BjoernInstructionNode();
+		if(!instrNode)
+			throw runtime_error("Out of memory");
 
+		stringstream sstr;
+		AsmUnparser().unparse(sstr, instr);
+		instrNode->setCode(sstr.str());
+		cout<<instrNode->getCode()<<endl;
+		
+		return NULL;
+	}
 
 };
 

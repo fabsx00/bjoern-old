@@ -28,11 +28,24 @@ public:
 };
 
 class BjoernInstructionNode : public BjoernNode {
+private:
+	string code;
 public:
 	BjoernInstructionNode()
 	{
 		type = "Instruction";
 	}
+
+	void setCode(string c)
+	{
+		code = c;
+	}
+
+	const string &getCode()
+	{
+		return code;
+	}
+	
 };
 
 class BjoernBasicBlockNode : public BjoernNode {
@@ -48,6 +61,24 @@ public:
 	void addSuccessor(uint64_t suc)
 	{
 		successors.push_back(suc);
+	}
+
+	void addInstruction(BjoernInstructionNode *node)
+	{
+		instructions.push_back(node);
+	}
+
+	~BjoernBasicBlockNode()
+	{
+		freeInstructions();
+	}
+
+	void freeInstructions()
+	{
+		std::list<BjoernInstructionNode *>::const_iterator it;
+		for (it = instructions.begin(); it != instructions.end(); ++it) {
+			delete *it;
+		}
 	}
 
 };
