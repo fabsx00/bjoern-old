@@ -35,17 +35,14 @@ public:
 
 	void visit(SgNode *node)
 	{
-	      	SgAsmFunction* func = isSgAsmFunction(node);
+		SgAsmFunction* func = isSgAsmFunction(node);
 		if(!func) return;
 		visitFunction(func);
 	}
 
 	void visitFunction(SgAsmFunction *func)
 	{
-
 		BjoernFunctionNode *bjoernFunc = createBjoernFuncFromSgFunc(func);
-		visitStatements(func, bjoernFunc);
-
 		writer.writeFunction(bjoernFunc);
 		delete bjoernFunc;
 	}
@@ -67,15 +64,18 @@ public:
 		bjoernFunc->setName(name);
 		bjoernFunc->setAddr(entryAddr);
 
-
-		SgSymbolTable * symbolTable = func->get_symbol_table();
-
+		visitStatements(func, bjoernFunc);
 		return bjoernFunc;
 	}
 
+	/**
+	   Iterate over statement list. SgASMStatements are actually basic blocks.
+	*/
 
 	void visitStatements(SgAsmFunction *func, BjoernFunctionNode *bjoernFunc)
 	{
+
+		// iterate over set of basic blocks
 
 		SgAsmStatementPtrList statements = func->get_statementList();
 
@@ -86,26 +86,57 @@ public:
 				throw runtime_error("SgAsmStatements that are not blocks exist!");
 			}
 
-
 			visitBlock(block, bjoernFunc);
-
-			SgAsmIntegerValuePtrList successors = block->get_successors();
-			for(size_t j = 0; j < successors.size(); j++){
-				// cout << successors[j] << endl;
-			}
 		}
 	}
 
+	/**
+	   Called for each basic block:
+
+	   Create a basic-block node and attach it to the function
+
+	 */
+
 	void visitBlock(SgAsmBlock *block, BjoernFunctionNode *bjoernFunc)
 	{
+		BjoernBasicBlockNode *basicBlock = createBjoernBasicBlockFromSgBlock(block);
+		bjoernFunc->addBasicBlock(basicBlock);
+
 		SgAsmStatementPtrList blockStmts = block->get_statementList();
 		for(size_t j = 0; j < blockStmts.size(); j++){
 			SgAsmStatement *stmt = blockStmts[j];
 			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
-			if(instr)
-				AsmUnparser().unparse(std::cout, instr);
+			visitInstruction(instr, bjoernFunc);
 		}
+
 	}
+
+	BjoernBasicBlockNode *createBjoernBasicBlockFromSgBlock(SgAsmBlock *block)
+	{
+		BjoernBasicBlockNode *basicBlock = new BjoernBasicBlockNode();
+		if(!basicBlock)
+			throw runtime_error("Out of memory");
+
+		// Add successors
+
+		SgAsmIntegerValuePtrList successors = block->get_successors();
+		for(size_t j = 0; j < successors.size(); j++){
+			basicBlock->addSuccessor(successors[j]->get_value());
+		}
+
+		return basicBlock;
+	}
+
+	/**
+	   Called for each instruction
+	 */
+
+	void visitInstruction(SgAsmInstruction *instr, BjoernFunctionNode *bjoernFunc)
+	{
+		if(instr)
+			AsmUnparser().unparse(std::cout, instr);
+	}
+
 
 };
 
