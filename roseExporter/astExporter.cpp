@@ -112,6 +112,8 @@ public:
 		if(!basicBlock)
 			throw runtime_error("Out of memory");
 
+		basicBlock->setAddr(block->get_address());
+
 		// Add successors
 
 		SgAsmIntegerValuePtrList successors = block->get_successors();
@@ -146,8 +148,8 @@ public:
 		AsmUnparser().unparse(sstr, instr);
 		instrNode->setCode(sstr.str());
 		cout<<instrNode->getCode()<<endl;
-		
-		return NULL;
+
+		return instrNode;
 	}
 
 };
