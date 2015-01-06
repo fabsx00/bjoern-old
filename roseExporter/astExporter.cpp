@@ -22,7 +22,7 @@ using namespace std;
 
 class MyProcessor : public SgSimpleProcessing
 {
-private:	
+private:
 	CSVWriter writer;
 public:
 	MyProcessor() { }
@@ -33,78 +33,94 @@ public:
 	   node and then manually walk the tree from there.
 	   That's not too efficient but shouldn't cause trouble.
 	*/
-	
+
 	void visit(SgNode *node)
-	{		
+	{
 	      	SgAsmFunction* func = isSgAsmFunction(node);
 		if(!func) return;
-		
 		visitFunction(func);
-		
 	}
 
 	void visitFunction(SgAsmFunction *func)
 	{
-				
-		BjoernFunction *bjoernFunc = createBjoernFuncFromSgFunc(func);					
+
+		BjoernFunction *bjoernFunc = createBjoernFuncFromSgFunc(func);
 		visitStatements(func, bjoernFunc);
-		
+
 		writer.writeFunction(bjoernFunc);
 		delete bjoernFunc;
 	}
 
 	BjoernFunction *createBjoernFuncFromSgFunc(SgAsmFunction *func)
 	{
-		BjoernFunction *bjoernFunc = new BjoernFunction();		
-		
+		BjoernFunction *bjoernFunc = new BjoernFunction();
+
 		if(!bjoernFunc)
 			throw runtime_error("Out of memory");
-		
+
 		/* Initialize name and address */
-		
+
 		string name = func->get_name();
 		SgAsmBlock *entryBlock = func->get_entry_block();
-		assert(entryBlock != NULL);		
+		assert(entryBlock != NULL);
 		rose_addr_t entryAddr = entryBlock->get_address();
-		
+
 		bjoernFunc->setName(name);
 		bjoernFunc->setAddr(entryAddr);
-		
-		
+
+
 		SgSymbolTable * symbolTable = func->get_symbol_table();
-						
+
 		return bjoernFunc;
 	}
-	
-	
-	void visitStatements(SgAsmFunction *func, BjoernFunction *funcNode)
+
+
+	void visitStatements(SgAsmFunction *func, BjoernFunction *bjoernFunc)
 	{
-				
-		SgAsmStatementPtrList statements = func->get_statementList();				
-		
+
+		SgAsmStatementPtrList statements = func->get_statementList();
+
 		for(size_t i = 0; i < statements.size(); i++){
-			SgAsmBlock *block = dynamic_cast<SgAsmBlock *>(statements[i]);			
-			// AsmUnparser().unparse(std::cout, stmt);			
+			SgAsmBlock *block = isSgAsmBlock(statements[i]);
+			if(!block){
+				// Not sure if this is ever reached.
+				throw runtime_error("SgAsmStatements that are not blocks exist!");
+			}
+
+
+			visitBlock(block, bjoernFunc);
+
 			SgAsmIntegerValuePtrList successors = block->get_successors();
 			for(size_t j = 0; j < successors.size(); j++){
-				cout << successors[j] << endl;
+				// cout << successors[j] << endl;
 			}
 		}
 	}
 
+	void visitBlock(SgAsmBlock *block, BjoernFunction *bjoernFunc)
+	{
+		SgAsmStatementPtrList blockStmts = block->get_statementList();
+		for(size_t j = 0; j < blockStmts.size(); j++){
+			SgAsmStatement *stmt = blockStmts[j];
+			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
+			if(instr)
+				AsmUnparser().unparse(std::cout, instr);
+
+		}
+	}
 
 };
 
 int main(int argc, char *argv[]) {
-	
+
 	/* Create a binary AST for the entire binary */
 	SgProject* myProject = frontend(argc, argv);
-	
+
 	/* Get a reference to the root node*/
 	SgNode*  rootNode = dynamic_cast<SgNode*>(myProject);
-	
+
 	/* Traverse AST in post-order */
-	
+
 	MyProcessor mp;
 	t_traverseOrder order = postorder;
 	mp.traverse(rootNode, order);
