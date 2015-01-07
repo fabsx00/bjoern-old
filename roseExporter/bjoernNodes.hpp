@@ -14,6 +14,7 @@ protected:
 	string type;
 	string addr;
 	int childId;
+	int id; /* set after writing */
 public:
 
 	BjoernNode(): childId(0) {}
@@ -23,6 +24,16 @@ public:
 		stringstream convert;
 		convert << (uint64_t) anAddr;
 		addr = convert.str();
+	}
+
+	void setId(unsigned long long anId)
+	{
+		id = anId;
+	}
+
+	unsigned long long getId()
+	{
+		return id;
 	}
 
 	const string & getType()
@@ -128,6 +139,8 @@ public:
 	{
 		return basicBlocks;
 	}
+
+
 
 
 	~BjoernFunctionNode()

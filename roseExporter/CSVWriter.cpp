@@ -47,6 +47,7 @@ void CSVWriter :: writeNodeHeader()
 
 void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 {
+	resetMaps();
 	writeFunctionNode(func);
 	writeBasicBlocksOfFunc(func);
 }
@@ -57,6 +58,7 @@ void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
 
 	nodeFile << "\t" << func->getName();
 	nodeFile << endl;
+	finishNode(func);
 }
 
 void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
@@ -68,8 +70,15 @@ void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
 		BjoernBasicBlockNode *basicBlock = *it;
 		writeBjoernNode(basicBlock);
 		nodeFile << endl;
+		finishNode(basicBlock);
 	}
 
+}
+
+void CSVWriter :: finishNode(BjoernNode *node)
+{
+	registerNodeForId(node);
+	curId ++;
 }
 
 void CSVWriter :: writeBjoernNode(BjoernNode *node)
@@ -77,6 +86,18 @@ void CSVWriter :: writeBjoernNode(BjoernNode *node)
 	nodeFile << node->getType() << "\t"
 		 << node->getAddr() << "\t"
 		 << node->getChildId();
+}
+
+void CSVWriter :: registerNodeForId(BjoernNode *node)
+{
+	idToNode[curId] = node;
+	addrToNode[node->getAddr()] = node;
+	node->setId(curId);
+}
+
+void CSVWriter :: resetMaps()
+{
+	idToNode.clear();
 }
 
 CSVWriter :: ~CSVWriter()

@@ -4,6 +4,7 @@
 #include "bjoernNodes.hpp"
 
 #include <fstream>
+#include <map>
 
 class CSVWriter
 {
@@ -13,6 +14,16 @@ private:
 	ofstream nodeFile;
 	ofstream edgeFile;
 
+	map<unsigned long long, BjoernNode *> idToNode;
+	map<string, BjoernNode *> addrToNode;
+	/* We keep a nodeToId map implicitly by saving
+	 ids inside nodes after writing */
+
+	void finishNode(BjoernNode *node);
+	void registerNodeForId(BjoernNode *node);
+	void resetMaps();
+
+
 public:
 	CSVWriter() : curId(0) {}
 	~CSVWriter();
@@ -20,7 +31,6 @@ public:
 	void init();
 	void openOutputFiles();
 	void writeNodeHeader();
-
 
 	void deinit();
 	void closeOutputFiles();
