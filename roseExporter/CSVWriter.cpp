@@ -60,8 +60,11 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 	writeFunctionNode(func);
 	writeBasicBlocksOfFunc(func);
 	writeInstructionsOfFunc(func);
+
 	connectFunctionToEntryBlock(func);
 	connectBasicBlocksViaControlFlow(func);
+	connectBasicBlocksToInstructions(func);
+
 }
 
 void CSVWriter :: writeInstructionsOfFunc(BjoernFunctionNode *func)
@@ -73,6 +76,9 @@ void CSVWriter :: writeInstructionsOfFunc(BjoernFunctionNode *func)
 	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
 	    it != basicBlocks.end(); it++){
 		BjoernBasicBlockNode *basicBlock = *it;
+
+		// iterate over instructions
+
 		const list<BjoernInstructionNode *> instructions = basicBlock->getInstructions();
 		for(list<BjoernInstructionNode *> :: const_iterator it2 = instructions.begin();
 		    it2 != instructions.end(); it2++){
@@ -164,6 +170,32 @@ void CSVWriter :: connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock
 		writeEdge(srcId, dstId, "FLOWS_TO");
 	}
 
+}
+
+void CSVWriter :: connectBasicBlocksToInstructions(BjoernFunctionNode *func)
+{
+	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
+
+	// iterate over basic blocks
+
+	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
+	    it != basicBlocks.end(); it++){
+		BjoernBasicBlockNode *basicBlock = *it;
+		connectBasicBlockToItsInstructions(basicBlock);
+	}
+}
+
+void CSVWriter :: connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basicBlock)
+{
+	unsigned long srcId = basicBlock->getId();
+
+	const list<BjoernInstructionNode *> instructions = basicBlock->getInstructions();
+	for(list<BjoernInstructionNode *> :: const_iterator it = instructions.begin();
+	    it != instructions.end(); it++){
+		BjoernInstructionNode *instr = *it;
+		unsigned long long dstId = instr->getId();
+		writeEdge(srcId, dstId, "IS_BASIC_BLOCK_OF");
+	}
 }
 
 

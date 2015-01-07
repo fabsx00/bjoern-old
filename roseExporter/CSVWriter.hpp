@@ -32,6 +32,8 @@ private:
 	void connectFunctionToEntryBlock(BjoernFunctionNode *func);
 	void connectBasicBlocksViaControlFlow(BjoernFunctionNode *func);
 	void connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock);
+	void connectBasicBlocksToInstructions(BjoernFunctionNode *func);
+	void connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basicBlock);
 
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);
