@@ -20,6 +20,9 @@ In summary, we create the following nodes:
 
 The following edges connect these nodes:
 
+* *Function-to-entry edges.* We connect each functions with its entry
+  basic block.
+
 * *Control flow edges.* Basic blocks are connected via control flow
   edges. We use labels 'true' and 'false' to indicate conditional
   branches.
