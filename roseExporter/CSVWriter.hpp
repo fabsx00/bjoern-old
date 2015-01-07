@@ -28,7 +28,7 @@ public:
 	void writeFunction(BjoernFunctionNode *func);
 	void writeFunctionNode(BjoernFunctionNode *func);
 	void writeBjoernNode(BjoernNode *node);
-
+	void writeBasicBlocksOfFunc(BjoernFunctionNode *func);
 
 };
 

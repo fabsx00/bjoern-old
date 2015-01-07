@@ -48,16 +48,28 @@ void CSVWriter :: writeNodeHeader()
 void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 {
 	writeFunctionNode(func);
+	writeBasicBlocksOfFunc(func);
 }
 
 void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
 {
 	writeBjoernNode(func);
 
-
 	nodeFile << "\t" << func->getName();
-
 	nodeFile << endl;
+}
+
+void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
+{
+	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
+
+	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
+	     it != basicBlocks.end(); it++){
+		BjoernBasicBlockNode *basicBlock = *it;
+		writeBjoernNode(basicBlock);
+		nodeFile << endl;
+	}
+
 }
 
 void CSVWriter :: writeBjoernNode(BjoernNode *node)

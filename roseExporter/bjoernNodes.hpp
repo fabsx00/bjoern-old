@@ -124,6 +124,12 @@ public:
 		basicBlocks.push_back(basicBlock);
 	}
 
+	const list<BjoernBasicBlockNode *> & getBasicBlocks()
+	{
+		return basicBlocks;
+	}
+
+
 	~BjoernFunctionNode()
 	{
 		freeBasicBlocks();
