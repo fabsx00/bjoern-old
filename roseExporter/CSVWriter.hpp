@@ -42,6 +42,8 @@ public:
 	void writeBasicBlocksOfFunc(BjoernFunctionNode *func);
 
 	void connectFunctionToEntryBlock(BjoernFunctionNode *func);
+	void connectBasicBlocksViaControlFlow(BjoernFunctionNode *func);
+	void connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock);
 
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);

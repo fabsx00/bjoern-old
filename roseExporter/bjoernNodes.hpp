@@ -89,6 +89,11 @@ public:
 		successors.push_back(suc);
 	}
 
+	const list<uint64_t> & getSuccessors()
+	{
+		return successors;
+	}
+
 	void addInstruction(BjoernInstructionNode *node)
 	{
 		instructions.push_back(node);

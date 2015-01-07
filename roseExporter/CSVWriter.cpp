@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 using namespace std;
 
@@ -59,6 +60,7 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 	writeFunctionNode(func);
 	writeBasicBlocksOfFunc(func);
 	connectFunctionToEntryBlock(func);
+	connectBasicBlocksViaControlFlow(func);
 }
 
 void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
@@ -74,8 +76,10 @@ void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
 {
 	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
 
+	// iterate over basic blocks
+
 	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
-	     it != basicBlocks.end(); it++){
+	    it != basicBlocks.end(); it++){
 		BjoernBasicBlockNode *basicBlock = *it;
 		writeBjoernNode(basicBlock);
 		nodeFile << endl;
@@ -100,6 +104,42 @@ void CSVWriter :: connectFunctionToEntryBlock(BjoernFunctionNode *func)
 	writeEdge(srcId, dstId, "FUNCTION_OF_CFG");
 
 }
+
+void CSVWriter :: connectBasicBlocksViaControlFlow(BjoernFunctionNode *func)
+{
+	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
+
+	// iterate over basic blocks
+
+	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
+	    it != basicBlocks.end(); it++){
+		BjoernBasicBlockNode *basicBlock = *it;
+		connectBasicBlockToSuccessors(basicBlock);
+	}
+
+}
+
+void CSVWriter :: connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock)
+{
+	const list<uint64_t> successors = basicBlock->getSuccessors();
+
+	unsigned long long srcId = basicBlock->getId();
+
+	for(list<uint64_t> :: const_iterator it = successors.begin();
+	    it != successors.end(); it++){
+
+		stringstream s; s << *it;
+		map<string, BjoernNode *> :: iterator it2 =  addrToNode.find(s.str());
+		if(it2 == addrToNode.end())
+			continue;
+
+		BjoernNode *dstNode = it2->second;
+		unsigned long long dstId = dstNode->getId();
+		writeEdge(srcId, dstId, "FLOWS_TO");
+	}
+
+}
+
 
 void CSVWriter :: writeEdge(unsigned long long srcId, unsigned long long dstId,
 		const char *edgeType)
