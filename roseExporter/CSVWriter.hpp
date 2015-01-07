@@ -31,6 +31,7 @@ public:
 	void init();
 	void openOutputFiles();
 	void writeNodeHeader();
+	void writeEdgeHeader();
 
 	void deinit();
 	void closeOutputFiles();
@@ -39,6 +40,11 @@ public:
 	void writeFunctionNode(BjoernFunctionNode *func);
 	void writeBjoernNode(BjoernNode *node);
 	void writeBasicBlocksOfFunc(BjoernFunctionNode *func);
+
+	void connectFunctionToEntryBlock(BjoernFunctionNode *func);
+
+	void writeEdge(unsigned long long srcId, unsigned long long dstId,
+		       const char *edgeType);
 
 };
 

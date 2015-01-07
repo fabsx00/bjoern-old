@@ -24,6 +24,7 @@ void CSVWriter :: init()
 {
 	openOutputFiles();
 	writeNodeHeader();
+	writeEdgeHeader();
 }
 
 void CSVWriter :: openOutputFiles()
@@ -44,12 +45,20 @@ void CSVWriter :: writeNodeHeader()
 	nodeFile << keys[N_KEYS - 1] << endl;
 }
 
+void CSVWriter :: writeEdgeHeader()
+{
+	edgeFile << "start" << "\t"
+		 << "end" << "\t"
+		 << "type" << endl;
+}
+
 
 void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 {
 	resetMaps();
 	writeFunctionNode(func);
 	writeBasicBlocksOfFunc(func);
+	connectFunctionToEntryBlock(func);
 }
 
 void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
@@ -73,6 +82,29 @@ void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
 		finishNode(basicBlock);
 	}
 
+}
+
+void CSVWriter :: connectFunctionToEntryBlock(BjoernFunctionNode *func)
+{
+	unsigned long long srcId = func->getId();
+	string entryAddr = func->getAddr();
+	map<string, BjoernNode *> :: iterator it = addrToNode.find(entryAddr);
+
+
+	if(it == addrToNode.end())
+		throw runtime_error("Error: can't find entry node for function\n");
+
+	BjoernNode *entryBlock = it->second;
+	unsigned long long dstId = entryBlock->getId();
+
+	writeEdge(srcId, dstId, "FUNCTION_OF_CFG");
+
+}
+
+void CSVWriter :: writeEdge(unsigned long long srcId, unsigned long long dstId,
+		const char *edgeType)
+{
+	edgeFile << srcId << "\t" << dstId << "\t" << edgeType << endl;
 }
 
 void CSVWriter :: finishNode(BjoernNode *node)
