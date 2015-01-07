@@ -10,7 +10,7 @@ enum bjoernKey_t {
 	TYPE,
 	ADDR,
 	CHILD_ID,
-	NAME,
+	CODE,
 	N_KEYS
 };
 
@@ -18,7 +18,7 @@ const char *keys[] = {
 	"type",
 	"addr",
 	"childId",
-	"name"
+	"code"
 };
 
 void CSVWriter :: init()
@@ -59,8 +59,34 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 	resetMaps();
 	writeFunctionNode(func);
 	writeBasicBlocksOfFunc(func);
+	writeInstructionsOfFunc(func);
 	connectFunctionToEntryBlock(func);
 	connectBasicBlocksViaControlFlow(func);
+}
+
+void CSVWriter :: writeInstructionsOfFunc(BjoernFunctionNode *func)
+{
+	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
+
+	// iterate over basic blocks
+
+	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
+	    it != basicBlocks.end(); it++){
+		BjoernBasicBlockNode *basicBlock = *it;
+		const list<BjoernInstructionNode *> instructions = basicBlock->getInstructions();
+		for(list<BjoernInstructionNode *> :: const_iterator it2 = instructions.begin();
+		    it2 != instructions.end(); it2++){
+			writeInstruction(*it2);
+		}
+	}
+}
+
+void CSVWriter :: writeInstruction(BjoernInstructionNode *instr)
+{
+	writeBjoernNode(instr);
+	nodeFile << "\t\"" << instr->getCode() << "\"";
+	nodeFile << endl;
+	finishNode(instr);
 }
 
 void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)

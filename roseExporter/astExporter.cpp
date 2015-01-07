@@ -21,6 +21,14 @@ using namespace rose::BinaryAnalysis::InstructionSemantics2;
 using namespace boost::algorithm;
 using namespace std;
 
+/**
+   The ROSE ASMUnparser is configured by
+   sub-classing and modifying callbacks.
+   The class below will output only the
+   disassembled instruction and omit
+   the byte-sequence and character dump.
+*/
+
 class MyUnparser : public AsmUnparser {
 
 public:

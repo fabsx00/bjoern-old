@@ -100,6 +100,11 @@ public:
 		instructions.push_back(node);
 	}
 
+	const list<BjoernInstructionNode *> & getInstructions()
+	{
+		return instructions;
+	}
+
 	~BjoernBasicBlockNode()
 	{
 		freeInstructions();
