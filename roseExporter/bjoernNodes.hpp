@@ -56,18 +56,19 @@ public:
 class BjoernInstructionNode : public BjoernNode {
 private:
 	string code;
+
 public:
 	BjoernInstructionNode()
 	{
 		type = "Instruction";
 	}
 
-	void setCode(string c)
+	void setCode(string str)
 	{
-		code = c;
+		code = str;
 	}
 
-	const string &getCode()
+	const string & getCode()
 	{
 		return code;
 	}

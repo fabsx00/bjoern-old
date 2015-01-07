@@ -1,5 +1,6 @@
 #define __STDC_FORMAT_MACROS // this needs to be there for some reason.
 
+#include <boost/algorithm/string/trim.hpp>
 #include <string>
 #include <inttypes.h>
 #include <iostream>
@@ -17,7 +18,20 @@
 using namespace rose;
 using namespace rose::BinaryAnalysis;
 using namespace rose::BinaryAnalysis::InstructionSemantics2;
+using namespace boost::algorithm;
 using namespace std;
+
+class MyUnparser : public AsmUnparser {
+
+public:
+
+	MyUnparser()
+	{
+		insn_callbacks.pre.clear();
+		insn_callbacks.post.clear();
+	}
+
+};
 
 class MyProcessor : public SgSimpleProcessing
 {
@@ -153,9 +167,10 @@ public:
 			throw runtime_error("Out of memory");
 
 		stringstream sstr;
-		AsmUnparser().unparse(sstr, instr);
-		instrNode->setCode(sstr.str());
-		// cout<<instrNode->getCode()<<endl;
+		MyUnparser().unparse(sstr, instr);
+		string code = sstr.str();
+		trim(code);
+		instrNode->setCode(code);
 
 		return instrNode;
 	}
