@@ -24,7 +24,15 @@ class MyProcessor : public SgSimpleProcessing
 private:
 	CSVWriter writer;
 public:
-	MyProcessor() { }
+	MyProcessor()
+	{
+		writer.init();
+	}
+
+	~MyProcessor()
+	{
+		writer.deinit();
+	}
 
 	/**
 	   Called for each node of the "binary AST"
@@ -147,7 +155,7 @@ public:
 		stringstream sstr;
 		AsmUnparser().unparse(sstr, instr);
 		instrNode->setCode(sstr.str());
-		cout<<instrNode->getCode()<<endl;
+		// cout<<instrNode->getCode()<<endl;
 
 		return instrNode;
 	}

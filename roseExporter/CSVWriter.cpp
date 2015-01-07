@@ -1,12 +1,15 @@
 #include "CSVWriter.hpp"
 
 #include <iostream>
+#include <stdexcept>
+
 using namespace std;
 
 enum bjoernKey_t {
 	TYPE,
 	ADDR,
-	CHILD_ID
+	CHILD_ID,
+	N_KEYS
 };
 
 const char *keys[] = {
@@ -18,11 +21,25 @@ const char *keys[] = {
 void CSVWriter :: init()
 {
 	openOutputFiles();
+	writeNodeHeader();
 }
 
 void CSVWriter :: openOutputFiles()
 {
-	// TODO
+	nodeFile.open("nodes.csv");
+	edgeFile.open("edge.csv");
+
+	if(!nodeFile.is_open() || !edgeFile.is_open())
+		throw runtime_error("Cannot open output files");
+
+}
+
+void CSVWriter :: writeNodeHeader()
+{
+	for(int i = 0; i < N_KEYS -1; i++){
+		nodeFile << keys[i] << '\t';
+	}
+	nodeFile << keys[N_KEYS - 1] << endl;
 }
 
 
@@ -43,5 +60,6 @@ void CSVWriter :: deinit()
 
 void CSVWriter :: closeOutputFiles()
 {
-	// TODO
+	nodeFile.close();
+	edgeFile.close();
 }

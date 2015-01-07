@@ -3,23 +3,28 @@
 
 #include "bjoernNodes.hpp"
 
+#include <fstream>
+
 class CSVWriter
 {
 
 private:
-  unsigned long long curId;
+	unsigned long long curId;
+	ofstream nodeFile;
+	ofstream edgeFile;
 
 public:
-  CSVWriter() : curId(0) {}
-  ~CSVWriter();
+	CSVWriter() : curId(0) {}
+	~CSVWriter();
 
-  void init();
-  void openOutputFiles();
+	void init();
+	void openOutputFiles();
+	void writeNodeHeader();
 
-  void deinit();
-  void closeOutputFiles();
+	void deinit();
+	void closeOutputFiles();
 
-  void writeFunction(BjoernFunctionNode *func);
+	void writeFunction(BjoernFunctionNode *func);
 
 };
 
