@@ -9,6 +9,7 @@ enum bjoernKey_t {
 	TYPE,
 	ADDR,
 	CHILD_ID,
+	NAME,
 	N_KEYS
 };
 
@@ -16,6 +17,7 @@ const char *keys[] = {
 	"type",
 	"addr",
 	"childId",
+	"name"
 };
 
 void CSVWriter :: init()
@@ -36,7 +38,7 @@ void CSVWriter :: openOutputFiles()
 
 void CSVWriter :: writeNodeHeader()
 {
-	for(int i = 0; i < N_KEYS -1; i++){
+	for(int i = 0; i < N_KEYS - 1; i++){
 		nodeFile << keys[i] << '\t';
 	}
 	nodeFile << keys[N_KEYS - 1] << endl;
@@ -45,7 +47,24 @@ void CSVWriter :: writeNodeHeader()
 
 void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 {
-	// TODO
+	writeFunctionNode(func);
+}
+
+void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
+{
+	writeBjoernNode(func);
+
+
+	nodeFile << "\t" << func->getName();
+
+	nodeFile << endl;
+}
+
+void CSVWriter :: writeBjoernNode(BjoernNode *node)
+{
+	nodeFile << node->getType() << "\t"
+		 << node->getAddr() << "\t"
+		 << node->getChildId();
 }
 
 CSVWriter :: ~CSVWriter()

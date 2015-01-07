@@ -25,6 +25,21 @@ public:
 		addr = convert.str();
 	}
 
+	const string & getType()
+	{
+		return type;
+	}
+
+	const string & getAddr()
+	{
+		return addr;
+	}
+
+	int getChildId()
+	{
+		return childId;
+	}
+
 };
 
 class BjoernInstructionNode : public BjoernNode {
@@ -45,7 +60,7 @@ public:
 	{
 		return code;
 	}
-	
+
 };
 
 class BjoernBasicBlockNode : public BjoernNode {
@@ -97,6 +112,11 @@ public:
 	void setName(string &aName)
 	{
 		name = aName;
+	}
+
+	const string & getName()
+	{
+		return name;
 	}
 
 	void addBasicBlock(BjoernBasicBlockNode *basicBlock)

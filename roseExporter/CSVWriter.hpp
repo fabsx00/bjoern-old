@@ -21,10 +21,14 @@ public:
 	void openOutputFiles();
 	void writeNodeHeader();
 
+
 	void deinit();
 	void closeOutputFiles();
 
 	void writeFunction(BjoernFunctionNode *func);
+	void writeFunctionNode(BjoernFunctionNode *func);
+	void writeBjoernNode(BjoernNode *node);
+
 
 };
 
