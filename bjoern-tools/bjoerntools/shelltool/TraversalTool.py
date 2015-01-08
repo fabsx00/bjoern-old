@@ -4,7 +4,7 @@ from bjoerntools.shelltool.JoernTool import BjoernTool
 class TraversalTool(BjoernTool):
     
     def __init__(self, DESCRIPTION):
-        JoernTool.__init__(self, DESCRIPTION)
+        BjoernTool.__init__(self, DESCRIPTION)
     
     # @Override
     def processLine(self, line):
