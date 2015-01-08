@@ -12,7 +12,7 @@
 
 */
 
-Object.metaClass.queryNodeIndex = { query
+Object.metaClass.queryNodeIndex = { query ->
 	index = g.getRawGraph().index().forNodes(NODE_INDEX)
 	try{
 	    new Neo4j2VertexIterable(index.query(query), g)._()
