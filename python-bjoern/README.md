@@ -1,4 +1,4 @@
-python-joern
+python-bjoern
 ==
 
 Introduction
