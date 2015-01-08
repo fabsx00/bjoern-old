@@ -5,7 +5,7 @@ import os
 DEFAULT_GRAPHDB_URL = "http://localhost:7474/db/data/"
 DEFAULT_STEP_DIR = os.path.dirname(__file__) + '/bjoernsteps/'
 
-class JoernSteps:
+class BjoernSteps:
 
     def __init__(self):
         self._initJoernSteps()

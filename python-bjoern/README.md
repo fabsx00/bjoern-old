@@ -25,9 +25,9 @@ and runs a gremlin traversal to retrieve all node with attribute
 
 ```lang-none
 
-from joern.all import JoernSteps
+from bjoern.all import BjoernSteps
 
-j = JoernSteps()
+j = BjoernSteps()
 
 j.setGraphDbURL('http://localhost:7474/db/data/')
 
