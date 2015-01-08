@@ -1,5 +1,5 @@
 
-from bjoerntools.shelltool.JoernTool import BjoernTool
+from bjoerntools.shelltool.BjoernTool import BjoernTool
 
 class TraversalTool(BjoernTool):
     
