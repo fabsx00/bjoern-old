@@ -41,9 +41,13 @@ void CSVWriter :: openOutputFiles()
 void CSVWriter :: writeNodeHeader()
 {
 	for(int i = 0; i < N_KEYS - 1; i++){
-		nodeFile << keys[i] << '\t';
+		nodeFile << keys[i]
+			 << ":string:nodeIndex"
+			 << '\t';
 	}
-	nodeFile << keys[N_KEYS - 1] << endl;
+	nodeFile << keys[N_KEYS - 1]
+		 << ":string:nodeIndex"
+		 << endl;
 }
 
 void CSVWriter :: writeEdgeHeader()
