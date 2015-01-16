@@ -152,15 +152,15 @@ public:
 		}
 
 
-		// iterate over set of instructions in basic block
+		// Add instructions to basic-block
 
 		SgAsmStatementPtrList blockStmts = block->get_statementList();
 		for(size_t j = 0; j < blockStmts.size(); j++){
 			SgAsmStatement *stmt = blockStmts[j];
 			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
 			if(!instr)
-				continue;
-
+				continue;		
+			
 			BjoernInstructionNode *instrNode = createBjoernInstructionFromSgInstruction(instr);
 			basicBlock->addInstruction(instrNode);
 		}
