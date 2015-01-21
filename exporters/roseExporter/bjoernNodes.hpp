@@ -7,51 +7,10 @@
 
 #include <stdint.h>
 
+#include "bjoernNode.hpp"
+
 using namespace std;
 
-class BjoernNode{
-protected:
-	string type;
-	string addr;
-	int childId;
-	int id; /* set after writing */
-public:
-
-	BjoernNode(): childId(0) {}
-
-	void setAddr(uint64_t anAddr)
-	{
-		stringstream convert;
-		convert << (uint64_t) anAddr;
-		addr = convert.str();
-	}
-
-	void setId(unsigned long long anId)
-	{
-		id = anId;
-	}
-
-	unsigned long long getId()
-	{
-		return id;
-	}
-
-	const string & getType()
-	{
-		return type;
-	}
-
-	const string & getAddr()
-	{
-		return addr;
-	}
-
-	int getChildId()
-	{
-		return childId;
-	}
-
-};
 
 class BjoernInstructionNode : public BjoernNode {
 private:
@@ -107,7 +66,7 @@ public:
 
 	~BjoernBasicBlockNode()
 	{
-		freeInstructions();
+		// freeInstructions();
 	}
 
 	void freeInstructions()
@@ -156,7 +115,7 @@ public:
 
 	~BjoernFunctionNode()
 	{
-		freeBasicBlocks();
+		// freeBasicBlocks();
 	}
 
 	void freeBasicBlocks()
