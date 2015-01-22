@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "bjoernNode.hpp"
+#include "../common/bjoernNode.hpp"
 #include "bjoernInstructionNode.hpp"
 #include "bjoernBasicBlockNode.hpp"
 #include "bjoernFunctionNode.hpp"
