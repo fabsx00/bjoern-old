@@ -16,4 +16,4 @@ g++ -std=c++11 -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"dot_e
 
 g++ -std=c++11 -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"bjoernNodes.d" -MT"bjoernNodes.d" bjoernNodes.cpp
 
-g++ -std=c++11 -O0 -g3 -Wno-unused-local-typedefs -o "to_csv.exe"  ./to_csv.o ./CSVWriter.o ./bjoernNodes.o ./BAP_SSA.o ./read_graph.o ./dot_export.o ./general.o
+g++ -std=c++11 -O0 -g3 -Wno-unused-local-typedefs -o "to_csv"  ./to_csv.o ./CSVWriter.o ./bjoernNodes.o ./BAP_SSA.o ./read_graph.o ./dot_export.o ./general.o
