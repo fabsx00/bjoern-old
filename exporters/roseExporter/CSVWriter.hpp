@@ -8,6 +8,13 @@
 
 class CSVWriter
 {
+public:
+	CSVWriter() : curId(0) {}
+	~CSVWriter();
+
+	void init();
+	void writeFunction(BjoernFunctionNode *func);
+	void deinit();
 
 private:
 	unsigned long long curId;
@@ -18,6 +25,11 @@ private:
 	map<string, BjoernNode *> addrToNode;
 	/* We keep a nodeToId map implicitly by saving
 	 ids inside nodes after writing */
+
+	void openOutputFiles();
+	void closeOutputFiles();
+	void writeNodeHeader();
+	void writeEdgeHeader();
 
 	void finishNode(BjoernNode *node);
 	void registerNodeForId(BjoernNode *node);
@@ -38,21 +50,6 @@ private:
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);
 
-public:
-	CSVWriter() : curId(0) {}
-	~CSVWriter();
-
-	void init();
-	void openOutputFiles();
-	void writeNodeHeader();
-	void writeEdgeHeader();
-
-	void deinit();
-	void closeOutputFiles();
-
-	void writeFunction(BjoernFunctionNode *func);
-
 };
-
 
 #endif

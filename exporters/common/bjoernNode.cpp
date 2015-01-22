@@ -1,5 +1,5 @@
 
-#include "../common/bjoernNode.hpp"
+#include "bjoernNode.hpp"
 
 #include <stdexcept>
 
