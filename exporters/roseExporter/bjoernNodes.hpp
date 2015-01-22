@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <iostream>
 
 #include <stdint.h>
 
@@ -17,7 +18,7 @@ private:
 	string code;
 
 public:
-	BjoernInstructionNode()
+	BjoernInstructionNode() : BjoernNode()
 	{
 		type = "Instruction";
 	}
@@ -39,7 +40,7 @@ private:
 	list<BjoernInstructionNode *> instructions;
 	list<uint64_t> successors;
 public:
-	BjoernBasicBlockNode()
+	BjoernBasicBlockNode() : BjoernNode()
 	{
 		type = "BasicBlock";
 	}
@@ -66,7 +67,7 @@ public:
 
 	~BjoernBasicBlockNode()
 	{
-		// freeInstructions();
+		freeInstructions();
 	}
 
 	void freeInstructions()
@@ -85,7 +86,7 @@ private:
 	list<BjoernBasicBlockNode *> basicBlocks;
 public:
 
-	BjoernFunctionNode()
+	BjoernFunctionNode() : BjoernNode()
 	{
 		type = "FunctionDef";
 	}
@@ -109,22 +110,18 @@ public:
 	{
 		return basicBlocks;
 	}
-
-
-
-
+	
 	~BjoernFunctionNode()
 	{
-		// freeBasicBlocks();
+		freeBasicBlocks();
 	}
 
 	void freeBasicBlocks()
-	{
+	{		
 		std::list<BjoernBasicBlockNode *>::const_iterator it;
 		for (it = basicBlocks.begin(); it != basicBlocks.end(); ++it) {
 			delete *it;
 		}
-
 	}
 
 };

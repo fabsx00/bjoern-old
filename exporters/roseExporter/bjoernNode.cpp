@@ -5,7 +5,7 @@
 
 using namespace std;
 
-BjoernNode::BjoernNode(): childId(0), id(0) {;}
+BjoernNode::BjoernNode(): addr("-1"), childId(UNSET_ID), id(UNSET_ID) {;}
 BjoernNode::~BjoernNode() {;}
 
 void BjoernNode :: setAddr(uint64_t anAddr)
@@ -22,14 +22,17 @@ void BjoernNode::setAddr(const string &anAddr)
 
 void BjoernNode :: setId(unsigned long long anId)
 {
-	if(id != 0)
-		throw runtime_error("Re-setting id");				
+	if(id != UNSET_ID)	
+		throw runtime_error("Re-setting id");
 	
 	id = anId;
 }
 
 void BjoernNode :: setChildId(unsigned long long anId)
 {
+	if(id != UNSET_ID)	
+		throw runtime_error("Re-setting child-id");
+	
 	childId = anId;
 }
 

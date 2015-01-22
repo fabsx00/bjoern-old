@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <sstream>
 
+#define UNSET_ID (0)
+
 using namespace std;
 
 class BjoernNode{

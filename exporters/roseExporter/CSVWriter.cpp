@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <typeinfo>
 
 using namespace std;
 
@@ -71,6 +72,17 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 
 }
 
+void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
+{
+	writeBjoernNode(func);
+
+	nodeFile << "\t" << func->getName();
+	nodeFile << endl;
+	finishNode(func);
+}
+
+
+
 void CSVWriter :: writeInstructionsOfFunc(BjoernFunctionNode *func)
 {
 	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
@@ -97,15 +109,6 @@ void CSVWriter :: writeInstruction(BjoernInstructionNode *instr)
 	nodeFile << "\t\"" << instr->getCode() << "\"";
 	nodeFile << endl;
 	finishNode(instr);
-}
-
-void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
-{
-	writeBjoernNode(func);
-
-	nodeFile << "\t" << func->getName();
-	nodeFile << endl;
-	finishNode(func);
 }
 
 void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
@@ -224,6 +227,12 @@ void CSVWriter :: writeBjoernNode(BjoernNode *node)
 
 void CSVWriter :: registerNodeForId(BjoernNode *node)
 {
+	
+	if(addrToNode.find(node->getAddr()) != addrToNode.end()){
+		std :: cout << "setting again: " << node->getAddr() << std :: endl;
+		std :: cout << typeid(node).name() << std :: endl;
+	}	
+	
 	idToNode[curId] = node;
 	addrToNode[node->getAddr()] = node;
 	node->setId(curId);
@@ -232,6 +241,7 @@ void CSVWriter :: registerNodeForId(BjoernNode *node)
 void CSVWriter :: resetMaps()
 {
 	idToNode.clear();
+	addrToNode.clear();
 }
 
 CSVWriter :: ~CSVWriter()

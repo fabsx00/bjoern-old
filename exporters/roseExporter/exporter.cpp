@@ -179,7 +179,8 @@ public:
 		string code = sstr.str();
 		trim(code);
 		instrNode->setCode(code);
-
+		instrNode->setAddr(instr->get_address());
+		
 		return instrNode;
 	}
 
