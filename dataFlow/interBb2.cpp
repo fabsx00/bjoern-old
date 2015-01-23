@@ -15,6 +15,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <sawyer/GraphBoost.h>
+#include "YicesSolver.h"
 
 using namespace rose;
 using namespace rose::BinaryAnalysis;
@@ -86,27 +87,25 @@ public:
 		if (f == NULL) return;
 		if (f->get_name() != "main") return;
 
-		// create dataflow engine
+		SymbolicSemantics::SValuePtr protoval = SymbolicSemantics::SValue::instance();
+		SymbolicSemantics::MemoryStatePtr memory = SymbolicSemantics::MemoryState::instance(protoval, protoval);
+
 		const RegisterDictionary *dictReg = RegisterDictionary::dictionary_pentium4();
-		auto opsRisc = SymbolicSemantics::RiscOperators::instance(dictReg);
+        BaseSemantics::RegisterStatePtr registers = BaseSemantics::RegisterStateGeneric::instance(protoval, dictReg);
+        BaseSemantics::StatePtr state = BaseSemantics::State::instance(registers, memory);
+
+        auto opsRisc = SymbolicSemantics::RiscOperators::instance(state);
+        opsRisc->set_compute_usedef();
 		auto dispX86 = DispatcherX86::instance(opsRisc);
+
 		DataFlow df(dispX86);
 
 		typedef Sawyer::Container::Graph<SgAsmBlock*> MyCfg;
 
-		// create cfg of function
-		MyCfg cfg;
-		ControlFlow().build_block_cfg_from_ast(node, cfg);
-		auto dfgs = df.buildGraphPerVertex(cfg, 0);
-		size_t i = 0;
-		for (DataFlow::Graph& dfg : dfgs.values())
-		{
-			std::stringstream path;
-			path << "main_graph_" << i++ << ".dot";
-			writeDfg(dfg, path.str());
-		}
-
-		std::cout << "Wrote " << i << " graphs\n";
+		// create dfg for first block
+		auto entryBlock = f->get_entry_block();
+		auto dfg = df.buildGraph(entryBlock);
+		std::cout << dfg.nVertices() << std::endl;
 	}
 };
 
