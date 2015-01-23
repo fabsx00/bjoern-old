@@ -51,10 +51,7 @@ public:
 		writer.init();
 	}
 
-	~MyProcessor()
-	{
-		writer.deinit();
-	}
+	~MyProcessor(){}
 
 	/**
 	   Called for each node of the "binary AST"
@@ -159,8 +156,8 @@ public:
 			SgAsmStatement *stmt = blockStmts[j];
 			SgAsmInstruction *instr = isSgAsmInstruction(stmt);
 			if(!instr)
-				continue;		
-			
+				continue;
+
 			BjoernInstructionNode *instrNode = createBjoernInstructionFromSgInstruction(instr);
 			basicBlock->addInstruction(instrNode);
 		}
@@ -180,7 +177,7 @@ public:
 		trim(code);
 		instrNode->setCode(code);
 		instrNode->setAddr(instr->get_address());
-		
+
 		return instrNode;
 	}
 

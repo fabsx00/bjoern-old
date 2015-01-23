@@ -22,12 +22,32 @@ const char *keys[] = {
 	"code"
 };
 
+// Public
+
 void CSVWriter :: init()
 {
 	openOutputFiles();
 	writeNodeHeader();
 	writeEdgeHeader();
 }
+
+void CSVWriter :: writeFunction(BjoernFunctionNode *func)
+{
+	resetMaps();
+	writeFunctionNode(func);
+	writeBasicBlocksOfFunc(func);
+	writeInstructionsOfFunc(func);
+
+	connectFunctionToEntryBlock(func);
+	connectBasicBlocksViaControlFlow(func);
+	connectBasicBlocksToInstructions(func);
+
+}
+
+
+
+
+// Private
 
 void CSVWriter :: openOutputFiles()
 {
@@ -56,20 +76,6 @@ void CSVWriter :: writeEdgeHeader()
 	edgeFile << "start" << "\t"
 		 << "end" << "\t"
 		 << "type" << endl;
-}
-
-
-void CSVWriter :: writeFunction(BjoernFunctionNode *func)
-{
-	resetMaps();
-	writeFunctionNode(func);
-	writeBasicBlocksOfFunc(func);
-	writeInstructionsOfFunc(func);
-
-	connectFunctionToEntryBlock(func);
-	connectBasicBlocksViaControlFlow(func);
-	connectBasicBlocksToInstructions(func);
-
 }
 
 void CSVWriter :: writeFunctionNode(BjoernFunctionNode *func)
@@ -246,7 +252,7 @@ void CSVWriter :: resetMaps()
 
 CSVWriter :: ~CSVWriter()
 {
-	deinit();
+  deinit();
 }
 
 void CSVWriter :: deinit()

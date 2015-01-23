@@ -14,7 +14,6 @@ public:
 
 	void init();
 	void writeFunction(BjoernFunctionNode *func);
-	void deinit();
 
 private:
 	unsigned long long curId;
@@ -49,6 +48,8 @@ private:
 
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);
+
+	void deinit();
 
 };
 
