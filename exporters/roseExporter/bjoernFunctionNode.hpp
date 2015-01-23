@@ -32,6 +32,15 @@ public:
 		return basicBlocks;
 	}
 
+	BjoernBasicBlockNode *getEntryBlock() const
+	{
+		if(basicBlocks.size() == 0)
+			return NULL;
+
+		return basicBlocks.front();
+	}
+
+
 	~BjoernFunctionNode()
 	{
 		freeBasicBlocks();

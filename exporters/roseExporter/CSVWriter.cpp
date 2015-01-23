@@ -45,8 +45,6 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 }
 
 
-
-
 // Private
 
 void CSVWriter :: openOutputFiles()
@@ -137,13 +135,8 @@ void CSVWriter :: connectFunctionToEntryBlock(BjoernFunctionNode *func)
 {
 	unsigned long long srcId = func->getId();
 	string entryAddr = func->getAddr();
-	map<string, BjoernNode *> :: iterator it = addrToNode.find(entryAddr);
 
-
-	if(it == addrToNode.end())
-		throw runtime_error("Error: can't find entry node for function\n");
-
-	BjoernNode *entryBlock = it->second;
+	BjoernBasicBlockNode *entryBlock = func->getEntryBlock();
 	unsigned long long dstId = entryBlock->getId();
 
 	writeEdge(srcId, dstId, "FUNCTION_OF_CFG");
@@ -233,12 +226,12 @@ void CSVWriter :: writeBjoernNode(BjoernNode *node)
 
 void CSVWriter :: registerNodeForId(BjoernNode *node)
 {
-	
+
 	if(addrToNode.find(node->getAddr()) != addrToNode.end()){
 		std :: cout << "setting again: " << node->getAddr() << std :: endl;
 		std :: cout << typeid(node).name() << std :: endl;
-	}	
-	
+	}
+
 	idToNode[curId] = node;
 	addrToNode[node->getAddr()] = node;
 	node->setId(curId);
