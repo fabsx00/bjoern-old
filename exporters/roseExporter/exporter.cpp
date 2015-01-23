@@ -130,6 +130,7 @@ public:
 
 		BjoernBasicBlockNode *basicBlock = createBjoernBasicBlockFromSgBlock(block);
 		bjoernFunc->addBasicBlock(basicBlock);
+		basicBlock->setFunc(bjoernFunc);
 
 	}
 

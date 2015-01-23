@@ -21,7 +21,6 @@ private:
 	ofstream edgeFile;
 
 	map<unsigned long long, BjoernNode *> idToNode;
-	map<string, BjoernNode *> addrToNode;
 	/* We keep a nodeToId map implicitly by saving
 	 ids inside nodes after writing */
 

@@ -163,15 +163,15 @@ void CSVWriter :: connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock
 
 	unsigned long long srcId = basicBlock->getId();
 
+	BjoernFunctionNode *func = basicBlock->getFunc();
+
 	for(list<uint64_t> :: const_iterator it = successors.begin();
 	    it != successors.end(); it++){
 
 		stringstream s; s << *it;
-		map<string, BjoernNode *> :: iterator it2 =  addrToNode.find(s.str());
-		if(it2 == addrToNode.end())
-			continue;
+		BjoernBasicBlockNode *dstNode = func->getBasicBlockByAddr(s.str());
+		if(!dstNode) continue;
 
-		BjoernNode *dstNode = it2->second;
 		unsigned long long dstId = dstNode->getId();
 		writeEdge(srcId, dstId, "FLOWS_TO");
 	}
@@ -226,21 +226,13 @@ void CSVWriter :: writeBjoernNode(BjoernNode *node)
 
 void CSVWriter :: registerNodeForId(BjoernNode *node)
 {
-
-	if(addrToNode.find(node->getAddr()) != addrToNode.end()){
-		std :: cout << "setting again: " << node->getAddr() << std :: endl;
-		std :: cout << typeid(node).name() << std :: endl;
-	}
-
 	idToNode[curId] = node;
-	addrToNode[node->getAddr()] = node;
 	node->setId(curId);
 }
 
 void CSVWriter :: resetMaps()
 {
 	idToNode.clear();
-	addrToNode.clear();
 }
 
 CSVWriter :: ~CSVWriter()

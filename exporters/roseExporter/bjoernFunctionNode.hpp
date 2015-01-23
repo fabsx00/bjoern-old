@@ -1,10 +1,17 @@
 #ifndef _BJOERN_FUNCTION_NODE_HPP
 #define _BJOERN_FUNCTION_NODE_HPP
 
+#include <list>
+#include <map>
+#include <string>
+
+using namespace std;
+
 class BjoernFunctionNode : public BjoernNode {
 private:
 	string name;
 	list<BjoernBasicBlockNode *> basicBlocks;
+	map<string, BjoernBasicBlockNode *> addrToBB;
 public:
 
 	BjoernFunctionNode() : BjoernNode()
@@ -25,6 +32,15 @@ public:
 	void addBasicBlock(BjoernBasicBlockNode *basicBlock)
 	{
 		basicBlocks.push_back(basicBlock);
+		addrToBB[basicBlock->getAddr()] = basicBlock;
+	}
+
+	BjoernBasicBlockNode *getBasicBlockByAddr(const string &addr)
+	{
+		auto it = addrToBB.find(addr);
+		if(it == addrToBB.end())
+			return NULL;
+		return it->second;
 	}
 
 	const list<BjoernBasicBlockNode *> & getBasicBlocks()
