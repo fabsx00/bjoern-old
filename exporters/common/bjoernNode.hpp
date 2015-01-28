@@ -15,6 +15,8 @@ protected:
 	string addr;
 	int childId;
 	int id; /* set after writing */
+	long long functionId;
+
 public:
 
 	BjoernNode();
@@ -28,6 +30,10 @@ public:
 	const string & getType() const;
 	virtual string getAddr() const;
 	int getChildId() const;
+
+	void setFunctionId(long long fId);
+	long long getFunctionId() const;
+
 };
 
 #endif

@@ -56,3 +56,13 @@ int BjoernNode::getChildId() const
 {
 	return childId;
 }
+
+void BjoernNode::setFunctionId(long long fId)
+{
+	functionId = fId;
+}
+
+long long BjoernNode::getFunctionId() const
+{
+	return functionId;
+}

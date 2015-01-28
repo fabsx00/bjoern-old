@@ -12,6 +12,7 @@ enum bjoernKey_t {
 	ADDR,
 	CHILD_ID,
 	CODE,
+	FUNCTION_ID,
 	N_KEYS
 };
 
@@ -19,7 +20,8 @@ const char *keys[] = {
 	"type",
 	"addr",
 	"childId",
-	"code"
+	"code",
+	"functionId"
 };
 
 // Public
@@ -35,6 +37,7 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 {
 	resetMaps();
 	writeFunctionNode(func);
+	func->setFunctionIdOfChildren();
 	writeBasicBlocksOfFunc(func);
 	writeInstructionsOfFunc(func);
 
@@ -125,6 +128,7 @@ void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
 	    it != basicBlocks.end(); it++){
 		BjoernBasicBlockNode *basicBlock = *it;
 		writeBjoernNode(basicBlock);
+		nodeFile<< "\t\t" << basicBlock->getFunctionId();
 		nodeFile << endl;
 		finishNode(basicBlock);
 	}

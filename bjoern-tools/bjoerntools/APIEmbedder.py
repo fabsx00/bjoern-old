@@ -72,7 +72,7 @@ class APIEmbedder(object):
     
         CHUNK_SIZE = 1024
     
-        query = """queryNodeIndex('type:Function').id"""
+        query = """queryNodeIndex('type:FunctionDef').id"""
         functionIds = self._runGremlinQuery(query)
 
         result = []

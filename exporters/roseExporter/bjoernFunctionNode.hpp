@@ -56,6 +56,15 @@ public:
 		return basicBlocks.front();
 	}
 
+	void setFunctionIdOfChildren()
+	{
+		std::list<BjoernBasicBlockNode *>::const_iterator it;
+		for (it = basicBlocks.begin(); it != basicBlocks.end(); ++it) {
+			BjoernBasicBlockNode *node = *it;
+			node->setFunctionId(id);
+		}
+	}
+
 
 	~BjoernFunctionNode()
 	{
