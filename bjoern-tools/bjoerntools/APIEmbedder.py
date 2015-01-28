@@ -81,7 +81,7 @@ class APIEmbedder(object):
             query = """
             _().transform{ %s }.scatter().transform{g.v(it)}
             .sideEffect{funcId = it.id}
-            .transform{ [funcId, it.functionToAPISymbolNodes().code.toList()] }
+            .transform{ [funcId, it.functionToCalls().code.toList()] }
             """ % (str(chunk))
 
             result.extend(self._runGremlinQuery(query))
