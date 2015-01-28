@@ -6,3 +6,7 @@ Gremlin.defineStep('functionToBasicBlocks', [Vertex,Pipe], {
 Gremlin.defineStep('functionToInstructions', [Vertex,Pipe], {
 	_().functionToBasicBlocks().out().filter{it.type == "Instruction"}
 })
+
+Gremlin.defineStep('functionToCalls', [Vertex,Pipe], {
+	_().functionToInstructions().filter{it.code.startsWith("call") }
+})
