@@ -52,7 +52,7 @@ class Embedder:
             label = self.termDocMatrix.index2Doc[i] 
             
             col = m.getcol(i)
-            entries = [(i,col[i,0]) for i in col.indices]
+            entries = [(i + 1,col[i,0]) for i in col.indices]
             entries.sort()
             features = " ".join(['%d:%f' % e for e in entries])
             row = '%s %s #%s\n' % (label, features, label) 
