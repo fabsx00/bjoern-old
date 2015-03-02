@@ -38,7 +38,7 @@ class BjoernSteps:
             self.gremlin.execute(self._createInitCommand())
             self.initCommandSent = True
         
-        return self.gremlin.execute(finalQuery)
+        return self.gremlin.execute(query)
         
     def runCypherQuery(self, cmd):
         """ Runs the specified cypher query on the graph database."""
