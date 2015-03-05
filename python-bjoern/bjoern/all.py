@@ -35,13 +35,10 @@ class BjoernSteps:
         definitions are prepended to the query."""
         
         if not self.initCommandSent:
-            self.initCommand = self._createInitCommand()
+            self.gremlin.execute(self._createInitCommand())
             self.initCommandSent = True
-            finalQuery = self.initCommand
-        else:
-            finalQuery = ""
-        finalQuery += query
-        return self.gremlin.execute(finalQuery)
+        
+        return self.gremlin.execute(query)
         
     def runCypherQuery(self, cmd):
         """ Runs the specified cypher query on the graph database."""

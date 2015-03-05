@@ -20,3 +20,8 @@ Object.metaClass.queryNodeIndex = { query ->
 	  return []._()
 	}
 }
+
+Object.metaClass.getFunctionsByName = { name ->
+	query = String.format("type:%s AND code:%s", TYPE_FUNCTION_DEF, name)
+	queryNodeIndex(query)
+}
