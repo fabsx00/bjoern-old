@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 		mlog[ERROR] << "Input file is not in a known executable file format.";
 		return 0;
 	}
-	bjoern::PssProcessor proc(binFile->get_binaryFile());
+	bjoern::PssProcessorX86 proc(binFile->get_binaryFile());
 	SgNode* rootNode = dynamic_cast<SgNode*>(proj);
 	t_traverseOrder order = postorder;
 

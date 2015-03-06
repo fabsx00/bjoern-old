@@ -6,16 +6,16 @@
  */
 
 #include <rose.h>
-#include <DispatcherX86.h>
 #include <BinaryControlFlow.h>
 #include <PartialSymbolicSemantics2.h>
+#include <DispatcherX86.h>
+#include <sawyer/GraphTraversal.h>
 
 #include "PssProcessor.h"
 
-using namespace rose;
-using namespace BinaryAnalysis;
-using namespace InstructionSemantics2;
 using namespace Diagnostics;
+using namespace Sawyer;
+using namespace Container;
 
 #define _DEBUG
 
@@ -33,11 +33,14 @@ void PssProcessor::initDiagnostics() {
 
 PssProcessor::PssProcessor() {
 	initDiagnostics();
+	initDispatcher();
 }
 
-PssProcessor::PssProcessor(SgAsmGenericFile* asmFile) : PssProcessor() {
+PssProcessor::PssProcessor(SgAsmGenericFile* asmFile) {
+	initDiagnostics();
 
-	// initialize the memory map
+	// create memory map for given binary
+	MemoryMap map;
 	auto sections = asmFile->get_mapped_sections();
 	for (auto section : sections)
 	{
@@ -46,7 +49,6 @@ PssProcessor::PssProcessor(SgAsmGenericFile* asmFile) : PssProcessor() {
 		rose_addr_t va = section->get_mapped_preferred_va();
 
 		if (size == 0) continue;
-
 
 		mlog[TRACE] << "Adding section: "<< section->get_name()->get_string() << " va: " << std::hex << va << ", size: " << size << ", mapped size: " << mappedSize << std::endl;
 		uint8_t* data = new uint8_t[mappedSize];
@@ -62,6 +64,34 @@ PssProcessor::PssProcessor(SgAsmGenericFile* asmFile) : PssProcessor() {
 		auto interval = AddressInterval::baseSize(va, mappedSize);
 		map.insert(interval,  MemoryMap::Segment(buff, 0, MemoryMap::READ_WRITE_EXECUTE));
 	}
+	initDispatcher(&map);
+}
+
+static void processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block) {
+	auto statements = block->get_statementList();
+	for (auto statement : statements) {
+		auto instr = isSgAsmInstruction(statement);
+		disp->processInstruction(instr);
+	}
+}
+
+static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace) {
+	// process bb
+	processBb(disp, vertex->value());
+	// save the state
+	auto state = disp->get_state();
+	auto savedState = state->clone();
+	// TODO: save the state persistently somewhere ;-)
+
+	// traverse all edges (there should e at most two static ones.)
+	// TODO: how do we handle switch-case statements?
+	for (auto& edge : vertex->outEdges()) {
+		if (edge.isSelfEdge()) continue;
+		auto targetVertex = *edge.target();
+
+		disp->get_operators()->set_state(savedState->clone());
+		createTrace(&targetVertex, disp, ++idTrace);
+	}
 }
 
 void PssProcessor::visit(SgNode *node) {
@@ -73,21 +103,53 @@ void PssProcessor::visit(SgNode *node) {
 	if (f->get_name() != "main") return;
 #endif
 
-	const RegisterDictionary *dictReg = RegisterDictionary::dictionary_pentium4();
-	auto opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
-	opsRisc->set_memory_map(&map);
+	/* Traverse all possible paths through the CFG in a depth-first search (DFS) manner.
+	 * Each path is assigned an ID. For each path the state is saved for each basic block.
+	 * Loops are not considered (the DFS traversal stops when a basic block is reached for the second time).
+	 */
 
-	auto dispX86 = DispatcherX86::instance(opsRisc);
-	auto entryBb = f->get_entry_block();
-	auto statements = entryBb->get_statementList();
+	// Get CFG of the function and create corresponding DFS traversal.
+	// TODO: we want to have a CFG that ends basic blocks not only at jump but also at call instructions.
+	Graph<SgAsmBlock*> cfg;
+	ControlFlow().build_block_cfg_from_ast(f, cfg);
+	//auto startVertex = cfg.findVertex(f->get_entry_block()->get_id());
+	auto startVertex = *cfg.findVertex(f->get_entry_block()->get_id());
+	// Start trace 0 from the start bb.
+	disp->get_state()->clear();
+	size_t idTrace = 0;
+	createTrace(&startVertex, disp, idTrace);
 
-	for (auto statement : statements)
-	{
-		auto instr = isSgAsmInstruction(statement);
-		dispX86->processInstruction(instr);
+	/*
+	VertexFlowGraphs result;
+	result.insert(startVertex, buildGraph(cfg.findVertex(startVertex)->value()));
+	std::vector<InstructionSemantics2::BaseSemantics::StatePtr> postState(cfg.nVertices()); // user-defined states
+	postState[startVertex] = userOps_->get_state();
 
-		mlog[DEBUG] << "-----------------\n" << *(dispX86->get_state());
+	typedef Sawyer::Container::Algorithm::DepthFirstForwardEdgeTraversal<const CFG> Traversal;
+	for (Traversal t(cfg, cfg.findVertex(startVertex)); t; ++t) {
+		typename CFG::ConstVertexNodeIterator source = t->source();
+		typename CFG::ConstVertexNodeIterator target = t->target();
+		InstructionSemantics2::BaseSemantics::StatePtr state = postState[target->id()];
+		if (state==NULL) {
+			ASSERT_not_null(postState[source->id()]);
+			state = postState[target->id()] = postState[source->id()]->clone();
+			userOps_->set_state(state);
+			result.insert(target->id(), buildGraph(target->value()));
+		}
 	}
+	*/
+
+}
+
+/* --- PssProcessorX86 --- */
+void PssProcessorX86::initDispatcher(const MemoryMap* memMap) {
+	const RegisterDictionary* dictReg = RegisterDictionary::dictionary_pentium4();
+	auto opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
+	if (memMap!=nullptr)
+	{
+		opsRisc->set_memory_map(memMap);
+	}
+	disp = DispatcherX86::instance(opsRisc);
 }
 
 } // namespace
