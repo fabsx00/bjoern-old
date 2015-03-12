@@ -29,7 +29,6 @@ protected:
 
 public:
 	PssProcessor();
-	PssProcessor(SgAsmGenericFile*);
 	virtual ~PssProcessor() {}
 	static void initDiagnostics();
 
@@ -40,6 +39,8 @@ class PssProcessorX86 : public PssProcessor
 {
 protected:
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr);
+public:
+	PssProcessorX86(const SgAsmGenericFile* input);
 };
 
 } // namespace
