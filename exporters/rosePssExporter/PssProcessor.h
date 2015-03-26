@@ -43,6 +43,7 @@ public:
 	PssProcessorX86(const SgAsmGenericFile* input);
 };
 
+
 } // namespace
 
 #endif /* PSSEXPORTER_H_ */

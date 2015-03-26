@@ -10,6 +10,8 @@
 #include <PartialSymbolicSemantics2.h>
 #include <DispatcherX86.h>
 #include <sawyer/GraphTraversal.h>
+#include <map>
+#include <iostream>
 
 #include "PssProcessor.h"
 
@@ -43,13 +45,28 @@ static void processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block
 	}
 }
 
-static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace) {
+
+typedef std::map<size_t, std::map<size_t, BaseSemantics::StatePtr>> StateMap;
+
+std::ostream& operator<<(std::ostream& os, const StateMap& sm) {
+	for (const auto& vertexEntry : sm) {
+		os << "Vertex: " << vertexEntry.first << std::endl;
+		for (const auto& traceEntry : vertexEntry.second) {
+			os << "\tTrace: " << traceEntry.first << std::endl;
+			os << *(traceEntry.second) << std::endl;
+		}
+	}
+	return os;
+}
+
+static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, StateMap& stateMap) {
 	// process bb
 	processBb(disp, vertex->value());
 	// save the state
 	auto state = disp->get_state();
 	auto savedState = state->clone();
-	// TODO: save the state persistently somewhere ;-)
+	// and add it to the states map
+	stateMap[vertex->id()][idTrace] = state->clone();
 
 	// traverse all edges (there should be at most two static ones.)
 	// TODO: how do we handle switch-case statements?
@@ -58,7 +75,7 @@ static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemant
 		auto targetVertex = *edge.target();
 
 		disp->get_operators()->set_state(savedState->clone());
-		createTrace(&targetVertex, disp, idTrace);
+		createTrace(&targetVertex, disp, idTrace, stateMap);
 		idTrace++;
 	}
 }
@@ -86,7 +103,10 @@ void PssProcessor::visit(SgNode *node) {
 	// Start trace 0 from the start bb.
 	disp->get_state()->clear();
 	size_t idTrace = 0;
-	createTrace(&startVertex, disp, idTrace);
+	StateMap stateMap;
+	createTrace(&startVertex, disp, idTrace, stateMap);
+	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << stateMap;
+
 	// TODO: create a useful data-flow data structure from the generated traces/states.
 }
 
