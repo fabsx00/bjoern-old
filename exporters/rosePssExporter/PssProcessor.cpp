@@ -9,15 +9,12 @@
 #include <BinaryControlFlow.h>
 #include <PartialSymbolicSemantics2.h>
 #include <DispatcherX86.h>
-#include <sawyer/GraphTraversal.h>
 #include <map>
 #include <iostream>
 
 #include "PssProcessor.h"
 
 using namespace Diagnostics;
-using namespace Sawyer;
-using namespace Container;
 
 #define _DEBUG
 
@@ -25,26 +22,11 @@ namespace bjoern {
 
 Sawyer::Message::Facility PssProcessor::mlog;
 
-void PssProcessor::initDiagnostics() {
-	static bool initialized = false;
-	if (initialized) return;
-	mlog = Sawyer::Message::Facility("bjoern::PssProcessor", Diagnostics::destination);
-	Diagnostics::mfacilities.insertAndAdjust(mlog);
-	initialized = true;
-}
+/*
+ * Tracing
+ */
 
-PssProcessor::PssProcessor() {
-	initDiagnostics();
-}
-
-static void processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block) {
-	auto statements = block->get_statementList();
-	for (auto statement : statements) {
-		auto instr = isSgAsmInstruction(statement);
-		disp->processInstruction(instr);
-	}
-}
-
+// TODO: this should probably be put into a separate class.
 
 typedef std::map<size_t, std::map<size_t, BaseSemantics::StatePtr>> StateMap;
 
@@ -59,28 +41,71 @@ std::ostream& operator<<(std::ostream& os, const StateMap& sm) {
 	return os;
 }
 
-static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, StateMap& stateMap) {
+static void processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
+	auto statements = block->get_statementList();
+	for (auto statement : statements) {
+		auto instr = isSgAsmInstruction(statement);
+		if (policy->skipInstruction(instr)) continue;
+		disp->processInstruction(instr);
+	}
+}
+
+static void createTrace(const Graph<SgAsmBlock*>::VertexNode* bb, BaseSemantics::DispatcherPtr disp, size_t& idTrace, StateMap& states, TracePolicy* policy) {
+	// check if the bb has already been visited for this traces.
+	auto& statesBb = states[bb->id()];
+	if (statesBb.find(idTrace) != statesBb.end()) {
+		// ok, we have been here before in this traces, abort...
+		mlog[DEBUG] << "Looped to basic block " << bb->id() << " in trace " << idTrace << ", ending trace here.\n";
+		return;
+	}
 	// process bb
-	processBb(disp, vertex->value());
+	//// invoke pre-callback from policy.
+	policy->startOfBb(bb->value(), idTrace, disp->get_state());
+	processBb(disp, bb->value(), policy);
+	//// invoke post-callback from policy.
+	policy->endOfBb(bb->value(), idTrace, disp->get_state());
+
 	// save the state
 	auto state = disp->get_state();
 	auto savedState = state->clone();
 	// and add it to the states map
-	stateMap[vertex->id()][idTrace] = state->clone();
+	statesBb[idTrace] = state->clone();
 
 	// traverse all edges (there should be at most two static ones.)
 	// TODO: how do we handle switch-case statements?
-	for (auto& edge : vertex->outEdges()) {
-		if (edge.isSelfEdge()) continue;
+	size_t tempIdTrace = idTrace;
+	for (auto& edge : bb->outEdges()) {
 		auto targetVertex = *edge.target();
 
 		disp->get_operators()->set_state(savedState->clone());
-		createTrace(&targetVertex, disp, idTrace, stateMap);
+		createTrace(&targetVertex, disp, idTrace, states, policy);
 		idTrace++;
+	}
+	// was the id incremented?
+	if (idTrace > tempIdTrace) {
+		// if so, undo the last increment.
+		idTrace--;
 	}
 }
 
+/*
+ * PssProcessor
+ */
+void PssProcessor::initDiagnostics() {
+	static bool initialized = false;
+	if (initialized) return;
+	mlog = Sawyer::Message::Facility("bjoern::PssProcessor", Diagnostics::destination);
+	Diagnostics::mfacilities.insertAndAdjust(mlog);
+	initialized = true;
+}
+
+PssProcessor::PssProcessor() {
+	initDiagnostics();
+	tracePolicy = nullptr;
+}
+
 void PssProcessor::visit(SgNode *node) {
+	assert(tracePolicy != nullptr);
 	SgAsmFunction* f = isSgAsmFunction(node);
 	if (f == NULL) return;
 
@@ -94,23 +119,46 @@ void PssProcessor::visit(SgNode *node) {
 	 * Loops are not considered (the DFS traversal stops when a basic block is reached for the second time).
 	 */
 
-	// Get CFG of the function and create corresponding DFS traversal.
+	// get CFG of the function and create corresponding DFS traversal.
 	// TODO: we want to have a CFG that ends basic blocks not only at jump but also at call instructions.
 	Graph<SgAsmBlock*> cfg;
 	ControlFlow().build_block_cfg_from_ast(f, cfg);
-	// XXX: does the start vertex always have ID 0?
-	auto startVertex = *cfg.findVertex(0);
-	// Start trace 0 from the start bb.
+	// get the start bb.
+	auto startBb = *cfg.findVertex(0);
+	// start trace 0 from the start bb.
 	disp->get_state()->clear();
 	size_t idTrace = 0;
-	StateMap stateMap;
-	createTrace(&startVertex, disp, idTrace, stateMap);
-	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << stateMap;
+	StateMap states;
+	createTrace(&startBb, disp, idTrace, states, tracePolicy);
+	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << states;
 
 	// TODO: create a useful data-flow data structure from the generated traces/states.
 }
 
-/* --- PssProcessorX86 --- */
+void PssProcessor::setTracePolicy(TracePolicy* tracePolicy) {
+	this->tracePolicy = tracePolicy;
+}
+
+/*
+ * TracePolicyX86
+ */
+
+void TracePolicyX86::startOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {
+	// anything?
+}
+
+void TracePolicyX86::endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {
+	// anything?
+}
+
+bool TracePolicyX86::skipInstruction(const SgAsmInstruction* instr) {
+	// we don't want to actually execute call instructions.
+	return "call" == instr->get_mnemonic();
+}
+
+/*
+ * PssProcessorX86
+ */
 void PssProcessorX86::initDispatcher(const MemoryMap* memMap) {
 	const RegisterDictionary* dictReg = RegisterDictionary::dictionary_pentium4();
 	auto opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
@@ -148,6 +196,7 @@ PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
 		map.insert(interval,  MemoryMap::Segment(buff, 0, MemoryMap::READ_WRITE_EXECUTE));
 	}
 	initDispatcher(&map);
+
 }
 
 } // namespace
