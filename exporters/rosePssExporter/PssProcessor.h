@@ -14,6 +14,8 @@
 #include <BaseSemantics2.h>
 #include <sawyer/GraphTraversal.h>
 
+#include "BasicBlockSummary.h"
+
 using namespace rose;
 using namespace BinaryAnalysis;
 using namespace InstructionSemantics2;

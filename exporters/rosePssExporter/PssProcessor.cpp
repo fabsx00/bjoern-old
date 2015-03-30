@@ -25,18 +25,12 @@ Sawyer::Message::Facility PssProcessor::mlog;
 /*
  * Tracing
  */
+typedef std::map<rose_addr_t, BasicBlockSummary> SummaryMap;
 
-// TODO: this should probably be put into a separate class.
-
-typedef std::map<size_t, std::map<size_t, BaseSemantics::StatePtr>> StateMap;
-
-std::ostream& operator<<(std::ostream& os, const StateMap& sm) {
-	for (const auto& vertexEntry : sm) {
-		os << "Vertex: " << vertexEntry.first << std::endl;
-		for (const auto& traceEntry : vertexEntry.second) {
-			os << "\tTrace: " << traceEntry.first << std::endl;
-			os << *(traceEntry.second) << std::endl;
-		}
+std::ostream& operator<<(std::ostream& os, const SummaryMap& summaryMap) {
+	for (const auto& entry : summaryMap) {
+		os << "Basic block: " << std::hex << entry.first << std::endl;
+		os << entry.second.sm << std::endl;
 	}
 	return os;
 }
@@ -62,24 +56,27 @@ static bool processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block
 	return endsInCall;
 }
 
-static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, StateMap& states, TracePolicy* policy) {
+static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy) {
 	// check if the bb has already been visited for this traces.
-	auto& statesBb = states[vertex->id()];
+	SgAsmBlock* bb = vertex->value();
+	auto& summaryBb = summaries[bb->get_address()];
+	auto& statesBb = summaryBb.sm;
 	if (statesBb.find(idTrace) != statesBb.end()) {
 		// ok, we have been here before in this traces, abort...
-		PssProcessor::mlog[DEBUG] << "Looped to basic block " << vertex->id() << " in trace " << idTrace << ", ending trace here.\n";
+		PssProcessor::mlog[TRACE] << "Looped to basic block " << vertex->id() << " in trace " << idTrace << ", ending trace here.\n";
 		return;
 	}
-	SgAsmBlock* bb = vertex->value();
 
 	// process bb
 	bool endsInCall = processBb(disp, bb, policy);
 	statesBb[idTrace] = disp->get_state()->clone();
 	if (endsInCall) {
-		// bb ends in call, we need to apply our calling convention policy.
-		PssProcessor::mlog[DEBUG] << "Vertex " << vertex->id() << " is call.\n";
+		// bb ends in call...
+		PssProcessor::mlog[TRACE] << "Vertex " << vertex->id() << " is call.\n";
+		// 1) set corresponding flag.
+		summaryBb.attributes |= BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL;
+		// 2) apply our calling convention policy.
 		auto preCallState = disp->get_state();
-		// derive the post call state from it...
 		policy->derivePostCallState(preCallState);
 	}
 	// save the state
@@ -93,7 +90,7 @@ static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemant
 		auto targetVertex = *edge.target();
 
 		disp->get_operators()->set_state(statePassOn->clone());
-		createTrace(&targetVertex, disp, idTrace, states, policy);
+		createTrace(&targetVertex, disp, idTrace, summaries, policy);
 		idTrace++;
 	}
 	// was the id incremented?
@@ -143,9 +140,9 @@ void PssProcessor::visit(SgNode *node) {
 	// start trace 0 from the start bb.
 	disp->get_state()->clear();
 	size_t idTrace = 0;
-	StateMap states;
-	createTrace(&startBb, disp, idTrace, states, tracePolicy);
-	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << states;
+	SummaryMap summaries;
+	createTrace(&startBb, disp, idTrace, summaries, tracePolicy);
+	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << summaries;
 
 	// TODO: create a useful data-flow data structure from the generated traces/states.
 }
