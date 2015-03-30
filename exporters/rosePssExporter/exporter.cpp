@@ -58,8 +58,6 @@ int main(int argc, char** argv) {
 	}
 
 	bjoern::PssProcessorX86 proc(binFile->get_binaryFile());
-	bjoern::TracePolicyX86 tp;
-	proc.setTracePolicy(&tp);
 	SgNode* rootNode = dynamic_cast<SgNode*>(proj);
 	t_traverseOrder order = postorder;
 

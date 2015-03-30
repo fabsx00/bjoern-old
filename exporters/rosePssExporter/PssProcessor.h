@@ -25,20 +25,23 @@ namespace bjoern {
 struct TracePolicy {
 	virtual void startOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {}
 	virtual void endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {}
-	virtual bool skipInstruction(const SgAsmInstruction* instr) { return false; }
+
+	virtual void derivePostCallState(BaseSemantics::StatePtr preCallState) {}
+	virtual bool isCall(const SgAsmInstruction* instr) = 0;
 	virtual ~TracePolicy() {}
 };
 
 class PssProcessor : public SgSimpleProcessing
 {
 protected:
-	static Sawyer::Message::Facility mlog;
 	BaseSemantics::DispatcherPtr disp;
 	TracePolicy* tracePolicy;
 
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr) = 0;
 
 public:
+	static Sawyer::Message::Facility mlog;
+
 	PssProcessor();
 	virtual ~PssProcessor() {}
 	void setTracePolicy(TracePolicy* tracePolicy);
@@ -48,10 +51,21 @@ public:
 };
 
 class TracePolicyX86 : public TracePolicy {
+/*!
+ * Specific to  Linux, cdecl, and x86.
+ */
+protected:
+	const BaseSemantics::RiscOperatorsPtr ops;
+	const RegisterDescriptor* descEax;
+	const RegisterDescriptor* descEcx;
+	const RegisterDescriptor* descEdx;
+
 public:
+	TracePolicyX86(const BaseSemantics::RiscOperatorsPtr ops);
 	virtual void startOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state);
 	virtual void endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state);
-	virtual bool skipInstruction(const SgAsmInstruction* instr);
+	virtual bool isCall(const SgAsmInstruction* instr);
+	virtual void derivePostCallState(BaseSemantics::StatePtr preCallState);
 };
 
 class PssProcessorX86 : public PssProcessor
@@ -60,6 +74,7 @@ protected:
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr);
 public:
 	PssProcessorX86(const SgAsmGenericFile* input);
+	virtual ~PssProcessorX86();
 };
 
 

@@ -41,43 +41,58 @@ std::ostream& operator<<(std::ostream& os, const StateMap& sm) {
 	return os;
 }
 
-static void processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
+static bool processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
+
+	//// invoke pre-callback from policy.
+	//policy->startOfBb(block, disp->get_state());
+	bool endsInCall = false;
+
 	auto statements = block->get_statementList();
 	for (auto statement : statements) {
 		auto instr = isSgAsmInstruction(statement);
-		if (policy->skipInstruction(instr)) continue;
+		if (policy->isCall(instr)) {
+			endsInCall = true;
+			break;
+		}
 		disp->processInstruction(instr);
 	}
+
+	//// invoke post-callback from policy.
+	//policy->endOfBb(block, disp->get_state());
+	return endsInCall;
 }
 
-static void createTrace(const Graph<SgAsmBlock*>::VertexNode* bb, BaseSemantics::DispatcherPtr disp, size_t& idTrace, StateMap& states, TracePolicy* policy) {
+static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, StateMap& states, TracePolicy* policy) {
 	// check if the bb has already been visited for this traces.
-	auto& statesBb = states[bb->id()];
+	auto& statesBb = states[vertex->id()];
 	if (statesBb.find(idTrace) != statesBb.end()) {
 		// ok, we have been here before in this traces, abort...
-		mlog[DEBUG] << "Looped to basic block " << bb->id() << " in trace " << idTrace << ", ending trace here.\n";
+		PssProcessor::mlog[DEBUG] << "Looped to basic block " << vertex->id() << " in trace " << idTrace << ", ending trace here.\n";
 		return;
 	}
-	// process bb
-	//// invoke pre-callback from policy.
-	policy->startOfBb(bb->value(), idTrace, disp->get_state());
-	processBb(disp, bb->value(), policy);
-	//// invoke post-callback from policy.
-	policy->endOfBb(bb->value(), idTrace, disp->get_state());
+	SgAsmBlock* bb = vertex->value();
 
+	// process bb
+	bool endsInCall = processBb(disp, bb, policy);
+	statesBb[idTrace] = disp->get_state()->clone();
+	if (endsInCall) {
+		// bb ends in call, we need to apply our calling convention policy.
+		PssProcessor::mlog[DEBUG] << "Vertex " << vertex->id() << " is call.\n";
+		auto preCallState = disp->get_state();
+		// derive the post call state from it...
+		policy->derivePostCallState(preCallState);
+	}
 	// save the state
-	auto state = disp->get_state();
-	auto savedState = state->clone();
+	auto statePassOn = disp->get_state();
 	// and add it to the states map
-	statesBb[idTrace] = state->clone();
 
 	// traverse all edges (there should be at most two static ones.)
 	// TODO: how do we handle switch-case statements?
 	size_t tempIdTrace = idTrace;
-	for (auto& edge : bb->outEdges()) {
+	for (auto& edge : vertex->outEdges()) {
 		auto targetVertex = *edge.target();
 
-		disp->get_operators()->set_state(savedState->clone());
+		disp->get_operators()->set_state(statePassOn->clone());
 		createTrace(&targetVertex, disp, idTrace, states, policy);
 		idTrace++;
 	}
@@ -151,9 +166,32 @@ void TracePolicyX86::endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSem
 	// anything?
 }
 
-bool TracePolicyX86::skipInstruction(const SgAsmInstruction* instr) {
-	// we don't want to actually execute call instructions.
+
+
+void TracePolicyX86::derivePostCallState(BaseSemantics::StatePtr preCallState) {
+
+	/* In cdecl eax, ecx, and edx are callee-saved.
+	 * Therefore they must be considered as unknown after a call.
+	 */
+	auto valUndef = preCallState->get_protoval()->undefined_(descEax->get_nbits());
+	preCallState->writeRegister(*descEax, valUndef, ops.get());
+
+	valUndef = preCallState->get_protoval()->undefined_(descEcx->get_nbits());
+	preCallState->writeRegister(*descEcx, valUndef, ops.get());
+
+	valUndef = preCallState->get_protoval()->undefined_(descEdx->get_nbits());
+	preCallState->writeRegister(*descEdx, valUndef, ops.get());
+}
+
+bool TracePolicyX86::isCall(const SgAsmInstruction* instr) {
 	return "call" == instr->get_mnemonic();
+}
+
+TracePolicyX86::TracePolicyX86(const BaseSemantics::RiscOperatorsPtr ops) : ops(ops) {
+	const RegisterDictionary* dictReg = RegisterDictionary::dictionary_pentium4();
+	descEax = dictReg->lookup("eax");
+	descEcx = dictReg->lookup("ecx");
+	descEdx = dictReg->lookup("edx");
 }
 
 /*
@@ -196,7 +234,13 @@ PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
 		map.insert(interval,  MemoryMap::Segment(buff, 0, MemoryMap::READ_WRITE_EXECUTE));
 	}
 	initDispatcher(&map);
-
+	TracePolicyX86* tp = new TracePolicyX86(disp->get_operators());
+	setTracePolicy(tp);
 }
+
+PssProcessorX86::~PssProcessorX86() {
+	delete tracePolicy;
+}
+
 
 } // namespace
