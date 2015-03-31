@@ -9,6 +9,7 @@
 #include <DispatcherX86.h>
 #include <BinaryDataFlow.h>
 #include <SymbolicSemantics2.h>
+#include <PartialSymbolicSemantics2.h>
 #include <AstSimpleProcessing.h>
 #include <Cxx_Grammar.h>
 #include <BinaryCallingConvention.h>
@@ -21,19 +22,19 @@
 using namespace rose;
 using namespace rose::BinaryAnalysis;
 using namespace rose::BinaryAnalysis::InstructionSemantics2;
+using namespace rose::BinaryAnalysis::InstructionSemantics2::PartialSymbolicSemantics;
 using namespace boost::algorithm;
 using namespace std;
-
 using namespace Sawyer;
 using namespace Container;
-
-using namespace Sawyer;
 
 class BjoernUseDefAnalyzer{
 
 protected:
 	BaseSemantics::DispatcherPtr disp;
-	MemoryMap map;
+	MemoryMap memoryMap;
+	const RegisterDictionary* dictReg;
+	RiscOperatorsPtr opsRisc;
 
 	void initMemoryMap(const SgAsmGenericFile *asmFile)
 	{
@@ -57,8 +58,16 @@ protected:
 			// no need to free data buffer, because buff is ref counted (right?)
 			auto buff = MemoryMap::StaticBuffer::instance(data, size);
 			auto interval = AddressInterval::baseSize(va, size);
-			map.insert(interval,  MemoryMap::Segment(buff, 0, MemoryMap::READ_WRITE_EXECUTE));
+			memoryMap.insert(interval,  MemoryMap::Segment(buff, 0, MemoryMap::READ_WRITE_EXECUTE));
 		}
+	}
+
+	void initDispatcher()
+	{
+		dictReg = RegisterDictionary::dictionary_pentium4();
+		opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
+		opsRisc->set_memory_map(&memoryMap);
+		disp = DispatcherX86::instance(opsRisc);
 	}
 
 public:
@@ -66,6 +75,7 @@ public:
 	void init(const SgAsmGenericFile* asmFile)
 	{
 		initMemoryMap(asmFile);
+		initDispatcher();
 	}
 
 	void analyze(SgAsmFunction *func)

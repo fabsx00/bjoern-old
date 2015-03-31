@@ -7,6 +7,7 @@
 #include <rose.h>
 #include <DispatcherX86.h>
 #include <BinaryDataFlow.h>
+#include <PartialSymbolicSemantics2.h>
 #include <SymbolicSemantics2.h>
 #include <AstSimpleProcessing.h>
 #include <Cxx_Grammar.h>
