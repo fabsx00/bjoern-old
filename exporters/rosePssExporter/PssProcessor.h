@@ -24,9 +24,19 @@ using namespace Container;
 
 namespace bjoern {
 
+//! Maps a basic block virtual addresses to a BasicBlockSummary.
+typedef std::map<rose_addr_t, BasicBlockSummary> SummaryMap;
+std::ostream& operator<<(std::ostream&, const SummaryMap&);
+
+class ISummaryMapCollector {
+public:
+	virtual void addSummaryMap(const std::string& function, SummaryMap&& summaries) = 0;
+	virtual ~ISummaryMapCollector() {}
+};
+
 struct TracePolicy {
-	virtual void startOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {}
-	virtual void endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {}
+	virtual void startOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state) {}
+	virtual void endOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state) {}
 
 	virtual void derivePostCallState(BaseSemantics::StatePtr preCallState) {}
 	virtual bool isCall(const SgAsmInstruction* instr) = 0;
@@ -38,6 +48,8 @@ class PssProcessor : public SgSimpleProcessing
 protected:
 	BaseSemantics::DispatcherPtr disp;
 	TracePolicy* tracePolicy;
+	ISummaryMapCollector* collector;
+
 
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr) = 0;
 
@@ -47,6 +59,7 @@ public:
 	PssProcessor();
 	virtual ~PssProcessor() {}
 	void setTracePolicy(TracePolicy* tracePolicy);
+	void setCollector(ISummaryMapCollector* collector);
 	static void initDiagnostics();
 
 	void visit(SgNode *node);
@@ -64,8 +77,8 @@ protected:
 
 public:
 	TracePolicyX86(const BaseSemantics::RiscOperatorsPtr ops);
-	virtual void startOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state);
-	virtual void endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state);
+	virtual void startOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state);
+	virtual void endOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state);
 	virtual bool isCall(const SgAsmInstruction* instr);
 	virtual void derivePostCallState(BaseSemantics::StatePtr preCallState);
 };
@@ -75,7 +88,7 @@ class PssProcessorX86 : public PssProcessor
 protected:
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr);
 public:
-	PssProcessorX86(const SgAsmGenericFile* input);
+	explicit PssProcessorX86(const SgAsmGenericFile* input);
 	virtual ~PssProcessorX86();
 };
 

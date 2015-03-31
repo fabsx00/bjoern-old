@@ -28,7 +28,16 @@
 
 using namespace rose;
 using namespace Diagnostics;
+using namespace bjoern;
 
+class MyCollector : public ISummaryMapCollector {
+	//! Simple Collector that writes all summaries to stdout.
+public:
+	void addSummaryMap(const std::string& function, SummaryMap&& summaries) {
+		std::cout << "*** Function: " << function << " ***\n";
+		std::cout << summaries;
+	}
+};
 
 int main(int argc, char** argv) {
 
@@ -58,6 +67,8 @@ int main(int argc, char** argv) {
 	}
 
 	bjoern::PssProcessorX86 proc(binFile->get_binaryFile());
+	MyCollector collector;
+	proc.setCollector(&collector);
 	SgNode* rootNode = dynamic_cast<SgNode*>(proj);
 	t_traverseOrder order = postorder;
 

@@ -27,11 +27,15 @@ struct BasicBlockSummary {
 		ENDS_IN_CALL = 1
 	};
 
-	BasicBlockSummary();
-	virtual ~BasicBlockSummary();
-
 	StateMap sm;
 	uint32_t attributes;
+
+	BasicBlockSummary();
+	BasicBlockSummary(BasicBlockSummary&&);
+	virtual ~BasicBlockSummary();
+
+	BasicBlockSummary& operator=(BasicBlockSummary&&);
+
 };
 
 } /* namespace bjoern */

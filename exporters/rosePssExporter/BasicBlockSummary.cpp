@@ -6,6 +6,7 @@
  */
 
 #include "BasicBlockSummary.h"
+#include <utility>
 
 namespace bjoern {
 
@@ -23,4 +24,14 @@ BasicBlockSummary::BasicBlockSummary() : attributes(0) {
 BasicBlockSummary::~BasicBlockSummary() {
 }
 
+BasicBlockSummary::BasicBlockSummary(BasicBlockSummary&& other) {
+	attributes = other.attributes;
+	sm = std::move(other.sm);
+}
+
+BasicBlockSummary& BasicBlockSummary::operator=(BasicBlockSummary&& other) {
+	attributes = other.attributes;
+	sm = std::move(other.sm);
+	return *this;
+}
 } /* namespace bjoern */

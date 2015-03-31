@@ -11,12 +11,11 @@
 #include <DispatcherX86.h>
 #include <map>
 #include <iostream>
+#include <utility>
 
 #include "PssProcessor.h"
 
 using namespace Diagnostics;
-
-#define _DEBUG
 
 namespace bjoern {
 
@@ -25,22 +24,21 @@ Sawyer::Message::Facility PssProcessor::mlog;
 /*
  * Tracing
  */
-typedef std::map<rose_addr_t, BasicBlockSummary> SummaryMap;
-
 std::ostream& operator<<(std::ostream& os, const SummaryMap& summaryMap) {
 	for (const auto& entry : summaryMap) {
-		os << "Basic block: " << std::hex << entry.first << std::endl;
-		os << entry.second.sm << std::endl;
+		os << "+++ Basic block: " << std::hex << entry.first << " +++\n";
+		os << entry.second.sm << std::
+				endl;
 	}
 	return os;
 }
 
 static bool processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
 
-	//// invoke pre-callback from policy.
-	//policy->startOfBb(block, disp->get_state());
-	bool endsInCall = false;
+	// invoke pre-callback from policy.
+	// policy->startOfBb(block, disp->get_state());
 
+	bool endsInCall = false;
 	auto statements = block->get_statementList();
 	for (auto statement : statements) {
 		auto instr = isSgAsmInstruction(statement);
@@ -51,8 +49,8 @@ static bool processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block
 		disp->processInstruction(instr);
 	}
 
-	//// invoke post-callback from policy.
-	//policy->endOfBb(block, disp->get_state());
+	// invoke post-callback from policy.
+	// policy->endOfBb(block, disp->get_state());
 	return endsInCall;
 }
 
@@ -111,13 +109,14 @@ void PssProcessor::initDiagnostics() {
 	initialized = true;
 }
 
-PssProcessor::PssProcessor() {
+PssProcessor::PssProcessor() : tracePolicy(nullptr), collector(nullptr) {
 	initDiagnostics();
-	tracePolicy = nullptr;
 }
 
 void PssProcessor::visit(SgNode *node) {
 	assert(tracePolicy != nullptr);
+	assert(collector != nullptr);
+
 	SgAsmFunction* f = isSgAsmFunction(node);
 	if (f == NULL) return;
 
@@ -132,7 +131,6 @@ void PssProcessor::visit(SgNode *node) {
 	 */
 
 	// get CFG of the function and create corresponding DFS traversal.
-	// TODO: we want to have a CFG that ends basic blocks not only at jump but also at call instructions.
 	Graph<SgAsmBlock*> cfg;
 	ControlFlow().build_block_cfg_from_ast(f, cfg);
 	// get the start bb.
@@ -143,27 +141,29 @@ void PssProcessor::visit(SgNode *node) {
 	SummaryMap summaries;
 	createTrace(&startBb, disp, idTrace, summaries, tracePolicy);
 	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << summaries;
-
-	// TODO: create a useful data-flow data structure from the generated traces/states.
+	// finally, pass the summary map to the collector.
+	collector->addSummaryMap(f->get_name(), std::move(summaries));
 }
 
 void PssProcessor::setTracePolicy(TracePolicy* tracePolicy) {
 	this->tracePolicy = tracePolicy;
 }
 
+void PssProcessor::setCollector(ISummaryMapCollector* collector) {
+	this->collector = collector;
+}
+
 /*
  * TracePolicyX86
  */
 
-void TracePolicyX86::startOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {
+void TracePolicyX86::startOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state) {
 	// anything?
 }
 
-void TracePolicyX86::endOfBb(const SgAsmBlock* bb, const size_t idTrace, BaseSemantics::StatePtr state) {
+void TracePolicyX86::endOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state) {
 	// anything?
 }
-
-
 
 void TracePolicyX86::derivePostCallState(BaseSemantics::StatePtr preCallState) {
 
