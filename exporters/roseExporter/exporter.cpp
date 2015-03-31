@@ -57,6 +57,7 @@ public:
 	void init(const SgAsmGenericFile* asmFile)
 	{
 		writer.init();
+		useDefAnalyzer.init(asmFile);
 	}
 
 	/**
