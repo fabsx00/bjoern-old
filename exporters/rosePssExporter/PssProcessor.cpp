@@ -27,31 +27,32 @@ Sawyer::Message::Facility PssProcessor::mlog;
 std::ostream& operator<<(std::ostream& os, const SummaryMap& summaryMap) {
 	for (const auto& entry : summaryMap) {
 		os << "+++ Basic block: " << std::hex << entry.first << " +++\n";
-		os << entry.second.sm << std::
-				endl;
+		os << entry.second;
 	}
 	return os;
 }
 
-static bool processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
+static BasicBlockSummary::ATTRIBUTES processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
 
 	// invoke pre-callback from policy.
-	// policy->startOfBb(block, disp->get_state());
-
-	bool endsInCall = false;
+	//// policy->startOfBb(block, disp->get_state());
 	auto statements = block->get_statementList();
 	for (auto statement : statements) {
 		auto instr = isSgAsmInstruction(statement);
 		if (policy->isCall(instr)) {
-			endsInCall = true;
-			break;
+			// we don't execute calls.
+			return BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL;
 		}
+		if (policy->isReturn(instr)) {
+			// we don't execute rets either.
+			return BasicBlockSummary::ATTRIBUTES::ENDS_IN_RET;
+		}
+
 		disp->processInstruction(instr);
 	}
-
 	// invoke post-callback from policy.
-	// policy->endOfBb(block, disp->get_state());
-	return endsInCall;
+	//// policy->endOfBb(block, disp->get_state());
+	return BasicBlockSummary::ATTRIBUTES::NONE;
 }
 
 static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy) {
@@ -61,19 +62,17 @@ static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemant
 	auto& statesBb = summaryBb.sm;
 	if (statesBb.find(idTrace) != statesBb.end()) {
 		// ok, we have been here before in this traces, abort...
-		PssProcessor::mlog[TRACE] << "Looped to basic block " << vertex->id() << " in trace " << idTrace << ", ending trace here.\n";
+		PssProcessor::mlog[DEBUG] << "Looped to basic block " << vertex->id() << " in trace " << idTrace << ", ending trace here.\n";
 		return;
 	}
 
 	// process bb
-	bool endsInCall = processBb(disp, bb, policy);
+	summaryBb.attributes = processBb(disp, bb, policy);
 	statesBb[idTrace] = disp->get_state()->clone();
-	if (endsInCall) {
+	if (summaryBb.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
 		// bb ends in call...
-		PssProcessor::mlog[TRACE] << "Vertex " << vertex->id() << " is call.\n";
-		// 1) set corresponding flag.
-		summaryBb.attributes |= BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL;
-		// 2) apply our calling convention policy.
+		PssProcessor::mlog[DEBUG] << "Vertex " << vertex->id() << " is call.\n";
+		// apply our calling convention policy.
 		auto preCallState = disp->get_state();
 		policy->derivePostCallState(preCallState);
 	}
@@ -114,21 +113,22 @@ PssProcessor::PssProcessor() : tracePolicy(nullptr), collector(nullptr) {
 }
 
 void PssProcessor::visit(SgNode *node) {
+
+	/* Traverses all possible paths through a function's CFG in a depth-first search (DFS) manner.
+	 * Each path is assigned an ID. For each path the state is saved for each basic block.
+	 * Loops are not considered (the DFS traversal stops when a basic block is reached for the second time).
+	 */
+
 	assert(tracePolicy != nullptr);
 	assert(collector != nullptr);
 
 	SgAsmFunction* f = isSgAsmFunction(node);
 	if (f == NULL) return;
-
-#ifdef _DEBUG
-	// only consider main()
+	mlog[TRACE] << "Processing function " << f->get_name() << std::endl;
+#if 0
+	// DEBUG: only consider main()
 	if (f->get_name() != "main") return;
 #endif
-
-	/* Traverse all possible paths through the CFG in a depth-first search (DFS) manner.
-	 * Each path is assigned an ID. For each path the state is saved for each basic block.
-	 * Loops are not considered (the DFS traversal stops when a basic block is reached for the second time).
-	 */
 
 	// get CFG of the function and create corresponding DFS traversal.
 	Graph<SgAsmBlock*> cfg;
@@ -140,7 +140,6 @@ void PssProcessor::visit(SgNode *node) {
 	size_t idTrace = 0;
 	SummaryMap summaries;
 	createTrace(&startBb, disp, idTrace, summaries, tracePolicy);
-	mlog[DEBUG] << "States for function " << std::hex << f->get_address() << std::endl << summaries;
 	// finally, pass the summary map to the collector.
 	collector->addSummaryMap(f->get_name(), std::move(summaries));
 }
@@ -181,7 +180,11 @@ void TracePolicyX86::derivePostCallState(BaseSemantics::StatePtr preCallState) {
 }
 
 bool TracePolicyX86::isCall(const SgAsmInstruction* instr) {
-	return "call" == instr->get_mnemonic();
+	return isSgAsmX86Instruction(instr)->get_kind() == x86_call;
+}
+
+bool TracePolicyX86::isReturn(const SgAsmInstruction* instr) {
+	return isSgAsmX86Instruction(instr)->get_kind() == x86_ret;
 }
 
 TracePolicyX86::TracePolicyX86(const BaseSemantics::RiscOperatorsPtr ops) : ops(ops) {
@@ -211,14 +214,13 @@ PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
 	for (auto section : sections)
 	{
 		rose_addr_t size = section->get_size();
-		rose_addr_t mappedSize = section->get_mapped_size();
 		rose_addr_t va = section->get_mapped_preferred_va();
 
 		if (size == 0) continue;
 
-		mlog[TRACE] << "Adding section: "<< section->get_name()->get_string() << " va: " << std::hex << va << ", size: " << size << ", mapped size: " << mappedSize << std::endl;
-		uint8_t* data = new uint8_t[mappedSize];
-		memset(data, 0, mappedSize);
+		mlog[TRACE] << "Adding section: "<< section->get_name()->get_string() << " va: " << std::hex << va << ", size: " << size << ", mapped size: " << section->get_mapped_size() << std::endl;
+		uint8_t* data = new uint8_t[size];
+		memset(data, 0, size);
 		if (section->read_content(0, data, size) != size)
 		{
 			mlog[ERROR] << "Failed to access section \"" << section->get_name()->get_string() << "\".";
@@ -226,8 +228,8 @@ PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
 		}
 
 		// no need to free data buffer, because buff is ref counted (right?)
-		auto buff = MemoryMap::StaticBuffer::instance(data, mappedSize);
-		auto interval = AddressInterval::baseSize(va, mappedSize);
+		auto buff = MemoryMap::StaticBuffer::instance(data, size);
+		auto interval = AddressInterval::baseSize(va, size);
 		map.insert(interval,  MemoryMap::Segment(buff, 0, MemoryMap::READ_WRITE_EXECUTE));
 	}
 	initDispatcher(&map);
@@ -238,6 +240,4 @@ PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
 PssProcessorX86::~PssProcessorX86() {
 	delete tracePolicy;
 }
-
-
 } // namespace

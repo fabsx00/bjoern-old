@@ -20,11 +20,12 @@ using namespace InstructionSemantics2;
 namespace bjoern {
 
 typedef std::map<size_t, BaseSemantics::StatePtr> StateMap;
-std::ostream& operator<<(std::ostream& os, const StateMap& sm);
 
 struct BasicBlockSummary {
 	enum ATTRIBUTES {
-		ENDS_IN_CALL = 1
+		NONE = 0,
+		ENDS_IN_CALL = 1,
+		ENDS_IN_RET = 1 << 1
 	};
 
 	StateMap sm;
@@ -37,6 +38,9 @@ struct BasicBlockSummary {
 	BasicBlockSummary& operator=(BasicBlockSummary&&);
 
 };
+
+std::ostream& operator<<(std::ostream&, const StateMap&);
+std::ostream& operator<<(std::ostream&, const BasicBlockSummary&);
 
 } /* namespace bjoern */
 

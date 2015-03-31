@@ -18,7 +18,20 @@ std::ostream& operator<<(std::ostream& os, const StateMap& sm) {
 	return os;
 }
 
-BasicBlockSummary::BasicBlockSummary() : attributes(0) {
+std::ostream& operator<<(std::ostream& os, const BasicBlockSummary& bbs) {
+	os << "Attributes: [";
+	if (bbs.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
+		os << "ENDS_IN_CALL ";
+	}
+	if (bbs.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_RET) {
+			os << "ENDS_IN_RET ";
+	}
+	os << "]\n";
+	os << bbs.sm;
+	return os;
+}
+
+BasicBlockSummary::BasicBlockSummary() : attributes(ATTRIBUTES::NONE) {
 }
 
 BasicBlockSummary::~BasicBlockSummary() {

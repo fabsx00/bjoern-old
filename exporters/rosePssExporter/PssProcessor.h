@@ -39,6 +39,7 @@ struct TracePolicy {
 	virtual void endOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state) {}
 
 	virtual void derivePostCallState(BaseSemantics::StatePtr preCallState) {}
+	virtual bool isReturn(const SgAsmInstruction* instr) = 0;
 	virtual bool isCall(const SgAsmInstruction* instr) = 0;
 	virtual ~TracePolicy() {}
 };
@@ -80,6 +81,7 @@ public:
 	virtual void startOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state);
 	virtual void endOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state);
 	virtual bool isCall(const SgAsmInstruction* instr);
+	virtual bool isReturn(const SgAsmInstruction* instr);
 	virtual void derivePostCallState(BaseSemantics::StatePtr preCallState);
 };
 
