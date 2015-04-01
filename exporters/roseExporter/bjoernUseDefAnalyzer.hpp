@@ -18,6 +18,7 @@
 
 #include "bjoernNodes.hpp"
 #include "CSVWriter.hpp"
+#include "tracePolicy.hpp"
 
 using namespace rose;
 using namespace rose::BinaryAnalysis;
@@ -27,6 +28,9 @@ using namespace boost::algorithm;
 using namespace std;
 using namespace Sawyer;
 using namespace Container;
+using namespace bjoern;
+
+#define INVALID_ADDRESS (0)
 
 class BjoernUseDefAnalyzer{
 
@@ -35,6 +39,7 @@ protected:
 	MemoryMap memoryMap;
 	const RegisterDictionary* dictReg;
 	RiscOperatorsPtr opsRisc;
+	TracePolicyX86* tp;
 
 	void initMemoryMap(const SgAsmGenericFile *asmFile)
 	{
@@ -43,7 +48,7 @@ protected:
 		{
 			rose_addr_t size = section->get_size();
 			rose_addr_t va = section->get_mapped_preferred_va();
-			if (size == 0)
+			if (size == 0 || va == INVALID_ADDRESS)
 				continue;
 
 			uint8_t* data = new uint8_t[size];
@@ -68,6 +73,11 @@ protected:
 		opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
 		opsRisc->set_memory_map(&memoryMap);
 		disp = DispatcherX86::instance(opsRisc);
+	}
+
+	void initTracePolicy()
+	{
+		 tp = new TracePolicyX86(disp->get_operators());
 	}
 
 public:
