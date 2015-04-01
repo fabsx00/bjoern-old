@@ -118,8 +118,12 @@ protected:
 			   BaseSemantics::DispatcherPtr disp)
 	{
 		SgAsmBlock* bb = vertex->value();
-
 		unsigned int nEdgesExpanded = 0;
+
+		processBasicBlock(bb);
+
+		// Save state after basic block execution
+		auto stateAfterBB = disp->get_state();
 
 		for (auto& edge : vertex->outEdges()) {
 
@@ -135,6 +139,8 @@ protected:
 			auto targetVertex = *edge.target();
 
 			path.push_back(getAddressForNode(*vertex));
+			// Reset to state after basic block execution
+			disp->get_operators()->set_state(stateAfterBB->clone());
 			traceCFG_r(&targetVertex, disp);
 			path.pop_back();
 
@@ -146,6 +152,14 @@ protected:
 			// were expandable.
 			writer->writeTrace(path);
 		}
+	}
+
+	/**
+	 */
+
+	void processBasicBlock(SgAsmBlock *basicBlock)
+	{
+
 	}
 
 	/**
