@@ -19,6 +19,7 @@
 #include "bjoernNodes.hpp"
 #include "CSVWriter.hpp"
 #include "tracePolicy.hpp"
+#include "BasicBlockSummary.hpp"
 
 using namespace rose;
 using namespace rose::BinaryAnalysis;
@@ -43,6 +44,8 @@ protected:
 
 	map<uint64_t, bool> visited;
 	list<rose_addr_t> path;
+	map<uint64_t, BasicBlockSummary *> summaries;
+	rose_addr_t curBBAddress;
 
 	CSVWriter *writer;
 
@@ -99,7 +102,17 @@ protected:
 	{
 		visited.clear();
 		path.clear();
+		clearSummaries();
+		path.push_back(getAddressForNode(*entryNode));
 		traceCFG_r(entryNode, disp);
+	}
+
+	void clearSummaries()
+	{
+		for(auto it = summaries.begin(); it != summaries.end(); it++){
+			delete it->second;
+		}
+		summaries.clear();
 	}
 
 
@@ -119,6 +132,7 @@ protected:
 	{
 		SgAsmBlock* bb = vertex->value();
 		unsigned int nEdgesExpanded = 0;
+		curBBAddress = path.back();
 
 		processBasicBlock(bb);
 
@@ -155,11 +169,60 @@ protected:
 	}
 
 	/**
-	 */
+	   Called for each basic block during trace construction.
+	   processor-state can be accessed via `disp`
+	   the trace policy is in `tp`
+
+	*/
 
 	void processBasicBlock(SgAsmBlock *basicBlock)
 	{
+		auto attributes = processStatements(basicBlock);
+		updateBasicBlockSummary(attributes);
+	}
 
+	void updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes)
+	{
+		// If a state does not exist for this block yet,
+		// create it.
+		if(summaries.find(curBBAddress) == summaries.end()){
+			summaries[curBBAddress] = new BasicBlockSummary;
+		}
+
+		// -- CONTINUE HERE --
+
+	}
+
+	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock)
+	{
+		auto statements = basicBlock->get_statementList();
+		for (auto statement : statements){
+			auto instr = isSgAsmInstruction(statement);
+
+			if (tp->isCall(instr)) {
+				// we don't execute calls.
+				return BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL;
+			}
+			if (tp->isReturn(instr)) {
+				// we don't execute rets either.
+				return BasicBlockSummary::ATTRIBUTES::ENDS_IN_RET;
+			}
+
+			processInstruction(instr);
+		}
+		return BasicBlockSummary::ATTRIBUTES::NONE;
+	}
+
+	void processInstruction(SgAsmInstruction *instr)
+	{
+
+		try {
+			disp->processInstruction(instr);
+		}catch (BaseSemantics::Exception& e){
+			// Not alll instructions are supported.
+			// Just catch and return
+			return;
+		}
 	}
 
 	/**
@@ -189,6 +252,7 @@ public:
 	{
 		initMemoryMap(asmFile);
 		initDispatcher();
+		initTracePolicy();
 	}
 
 	void setWriter(CSVWriter *aWriter)
