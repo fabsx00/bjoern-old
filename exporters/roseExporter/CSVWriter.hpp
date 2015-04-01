@@ -2,9 +2,13 @@
 #define _CSV_WRITER_HPP
 
 #include "bjoernNodes.hpp"
+#include <rose.h>
 
 #include <fstream>
 #include <map>
+#include <list>
+
+using namespace std;
 
 class CSVWriter
 {
@@ -14,6 +18,7 @@ public:
 
 	void init();
 	void writeFunction(BjoernFunctionNode *func);
+	void writeTrace(list<rose_addr_t> &path);
 
 private:
 	unsigned long long curId;

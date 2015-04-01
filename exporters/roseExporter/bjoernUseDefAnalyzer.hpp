@@ -44,6 +44,9 @@ protected:
 	map<uint64_t, bool> visited;
 	list<rose_addr_t> path;
 
+	CSVWriter *writer;
+
+
 	void initMemoryMap(const SgAsmGenericFile *asmFile)
 	{
 		auto sections = asmFile->get_mapped_sections();
@@ -141,7 +144,7 @@ protected:
 		if(nEdgesExpanded == 0){
 			// reached a node where no more edges
 			// were expandable.
-			// call 'complete'
+			writer->writeTrace(path);
 		}
 	}
 
@@ -172,6 +175,11 @@ public:
 	{
 		initMemoryMap(asmFile);
 		initDispatcher();
+	}
+
+	void setWriter(CSVWriter *aWriter)
+	{
+		writer = aWriter;
 	}
 
 	void analyze(SgAsmFunction *func)

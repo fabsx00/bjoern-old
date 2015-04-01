@@ -59,6 +59,7 @@ public:
 	{
 		writer.init();
 		useDefAnalyzer.init(asmFile);
+		useDefAnalyzer.setWriter(&writer);
 	}
 
 	/**
@@ -79,9 +80,9 @@ public:
 	{
 		BjoernFunctionNode *bjoernFunc = createBjoernFuncFromSgFunc(func);
 		writer.writeFunction(bjoernFunc);
-		delete bjoernFunc;
-
+		// this will call the writer internally
 		useDefAnalyzer.analyze(func);
+		delete bjoernFunc;
 	}
 
 	BjoernFunctionNode *createBjoernFuncFromSgFunc(SgAsmFunction *func)

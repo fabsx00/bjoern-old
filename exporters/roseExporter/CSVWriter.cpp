@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <typeinfo>
+#include <list>
 
 using namespace std;
 
@@ -47,6 +48,10 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 
 }
 
+void CSVWriter :: writeTrace(list<rose_addr_t> &path)
+{
+
+}
 
 // Private
 
