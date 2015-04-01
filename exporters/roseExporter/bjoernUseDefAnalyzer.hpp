@@ -42,6 +42,7 @@ protected:
 	TracePolicyX86* tp;
 
 	map<uint64_t, bool> visited;
+	list<rose_addr_t> path;
 
 	void initMemoryMap(const SgAsmGenericFile *asmFile)
 	{
@@ -94,7 +95,7 @@ protected:
 	void traceCFG(const Graph<SgAsmBlock*>::VertexNode* entryNode)
 	{
 		visited.clear();
-
+		path.clear();
 		traceCFG_r(entryNode, disp);
 	}
 
@@ -115,7 +116,6 @@ protected:
 	{
 		SgAsmBlock* bb = vertex->value();
 
-
 		unsigned int nEdgesExpanded = 0;
 
 		for (auto& edge : vertex->outEdges()) {
@@ -130,7 +130,10 @@ protected:
 
 			nEdgesExpanded ++;
 			auto targetVertex = *edge.target();
+
+			path.push_back(getAddressForNode(*vertex));
 			traceCFG_r(&targetVertex, disp);
+			path.pop_back();
 
 			visited.erase(edgeId);
 		}
@@ -140,7 +143,6 @@ protected:
 			// were expandable.
 			// call 'complete'
 		}
-
 	}
 
 	/**
@@ -152,11 +154,16 @@ protected:
 	uint64_t edgeToId(Graph<SgAsmBlock*>::EdgeNode edge)
 	{
 		// we assume here that rose_addr_t is 32 bit
-		auto src_addr = (*edge.source()).value()->get_address();
-		auto dst_addr = (*edge.target()).value()->get_address();
+		auto src_addr = getAddressForNode(*edge.source());
+		auto dst_addr = getAddressForNode(*edge.target());
 		return ((uint64_t) src_addr << 32) | dst_addr;
 	}
 
+
+	rose_addr_t getAddressForNode(Graph<SgAsmBlock*>::VertexNode node)
+	{
+		return node.value()->get_address();
+	}
 
 
 public:
