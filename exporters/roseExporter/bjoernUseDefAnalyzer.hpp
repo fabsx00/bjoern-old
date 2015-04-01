@@ -84,11 +84,11 @@ protected:
 
 
 	/*
-	   Traverses all possible paths through a function's CFG in a
-	   depth-first search (DFS) manner. Each path is assigned an
-	   ID. For each path the state is saved for each basic block.
-	   Loops are not considered (the DFS traversal stops when a basic
-	   block is reached for the second time).
+	  Traverse all possible paths in a CFG. A depth first search
+	  is performed where no edge is ever expanded twice. When a
+	  node is reached where no more edges can be expanded, a
+	  callback function is invoked, allowing the path to be
+	  processed.
 	*/
 
 	void traceCFG(const Graph<SgAsmBlock*>::VertexNode* entryNode)
@@ -102,11 +102,10 @@ protected:
 	bool isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge,
 			       uint64_t edgeId)
 	{
-		if( visited.find(edgeId) != visited.end()){
-				// call 'complete' function here
-				return true;
-		}
+		// has edge already been expanded?
 
+		if( visited.find(edgeId) != visited.end())
+				return true;
 		return false;
 	}
 
@@ -117,9 +116,9 @@ protected:
 		SgAsmBlock* bb = vertex->value();
 
 
-		bool thereAreEdges = false;
+		unsigned int nEdgesExpanded = 0;
+
 		for (auto& edge : vertex->outEdges()) {
-			thereAreEdges = true;
 
 			uint64_t edgeId = edgeToId(edge);
 			visited[edgeId] = true;
@@ -129,15 +128,17 @@ protected:
 				continue;
 			}
 
+			nEdgesExpanded ++;
 			auto targetVertex = *edge.target();
 			traceCFG_r(&targetVertex, disp);
 
 			visited.erase(edgeId);
 		}
 
-		if(!thereAreEdges){
-			// reached a node with no outgoing edges
-			// call 'complete' function'
+		if(nEdgesExpanded == 0){
+			// reached a node where no more edges
+			// were expandable.
+			// call 'complete'
 		}
 
 	}
