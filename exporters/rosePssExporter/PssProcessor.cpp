@@ -32,7 +32,7 @@ std::ostream& operator<<(std::ostream& os, const SummaryMap& summaryMap) {
 	return os;
 }
 
-static BasicBlockSummary::ATTRIBUTES processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
+BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
 
 	// invoke pre-callback from policy.
 	//// policy->startOfBb(block, disp->get_state());
@@ -47,22 +47,28 @@ static BasicBlockSummary::ATTRIBUTES processBb(BaseSemantics::DispatcherPtr disp
 			// we don't execute rets either.
 			return BasicBlockSummary::ATTRIBUTES::ENDS_IN_RET;
 		}
-
+		try {
 		disp->processInstruction(instr);
+		}
+		catch (BaseSemantics::Exception& e) {
+			mlog[WARN] << "Dispatcher was unable to interpret the instruction '" << e.insn->get_mnemonic()
+					<< "' at address " << std::hex << e.insn->get_address() << std::endl;
+		}
 	}
 	// invoke post-callback from policy.
 	//// policy->endOfBb(block, disp->get_state());
 	return BasicBlockSummary::ATTRIBUTES::NONE;
 }
 
-static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy) {
+void PssProcessor::createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy) {
 	// check if the bb has already been visited for this traces.
 	SgAsmBlock* bb = vertex->value();
 	auto& summaryBb = summaries[bb->get_address()];
 	auto& statesBb = summaryBb.sm;
+	mlog[TRACE] << "Processing basic block " << std::hex << bb->get_address() << " in trace " << idTrace << ", ending trace here.\n";
 	if (statesBb.find(idTrace) != statesBb.end()) {
 		// ok, we have been here before in this traces, abort...
-		PssProcessor::mlog[DEBUG] << "Looped to basic block " << vertex->id() << " in trace " << idTrace << ", ending trace here.\n";
+		mlog[DEBUG] << "Looped to basic block "	<< std::hex << bb->get_address() << " in trace " << idTrace << ", ending trace here.\n";
 		return;
 	}
 
@@ -70,8 +76,6 @@ static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemant
 	summaryBb.attributes = processBb(disp, bb, policy);
 	statesBb[idTrace] = disp->get_state()->clone();
 	if (summaryBb.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
-		// bb ends in call...
-		PssProcessor::mlog[DEBUG] << "Vertex " << vertex->id() << " is call.\n";
 		// apply our calling convention policy.
 		auto preCallState = disp->get_state();
 		policy->derivePostCallState(preCallState);
@@ -124,7 +128,11 @@ void PssProcessor::visit(SgNode *node) {
 
 	SgAsmFunction* f = isSgAsmFunction(node);
 	if (f == NULL) return;
-	mlog[TRACE] << "Processing function " << f->get_name() << std::endl;
+	if (f->get_address() == INVALID_ADDRESS) {
+		mlog[WARN] << "Skipping invalid function " << f->get_name() << " at " << std::hex << f->get_address() << std::endl;
+		return;
+	}
+	mlog[TRACE] << "Processing function " << f->get_name() << " at " << std::hex << f->get_address() << std::endl;
 #if 0
 	// DEBUG: only consider main()
 	if (f->get_name() != "main") return;
@@ -208,8 +216,7 @@ void PssProcessorX86::initDispatcher(const MemoryMap* memMap) {
 }
 
 PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
-	// create memory map for given binary
-	MemoryMap map;
+	// initialize memory map for given binary
 	auto sections = asmFile->get_mapped_sections();
 	for (auto section : sections)
 	{
@@ -217,6 +224,7 @@ PssProcessorX86::PssProcessorX86(const SgAsmGenericFile* asmFile) {
 		rose_addr_t va = section->get_mapped_preferred_va();
 
 		if (size == 0) continue;
+		if (va == INVALID_ADDRESS) continue;
 
 		mlog[TRACE] << "Adding section: "<< section->get_name()->get_string() << " va: " << std::hex << va << ", size: " << size << ", mapped size: " << section->get_mapped_size() << std::endl;
 		uint8_t* data = new uint8_t[size];

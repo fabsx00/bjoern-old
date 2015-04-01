@@ -22,6 +22,8 @@ using namespace InstructionSemantics2;
 using namespace Sawyer;
 using namespace Container;
 
+#define INVALID_ADDRESS 0
+
 namespace bjoern {
 
 //! Maps a basic block virtual addresses to a BasicBlockSummary.
@@ -51,12 +53,13 @@ protected:
 	TracePolicy* tracePolicy;
 	ISummaryMapCollector* collector;
 
-
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr) = 0;
 
-public:
+	static BasicBlockSummary::ATTRIBUTES processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy);
+	static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy);
 	static Sawyer::Message::Facility mlog;
 
+public:
 	PssProcessor();
 	virtual ~PssProcessor() {}
 	void setTracePolicy(TracePolicy* tracePolicy);
@@ -88,6 +91,7 @@ public:
 class PssProcessorX86 : public PssProcessor
 {
 protected:
+	MemoryMap map;
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr);
 public:
 	explicit PssProcessorX86(const SgAsmGenericFile* input);
