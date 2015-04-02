@@ -11,6 +11,8 @@
 #include <rose.h>
 #include <BaseSemantics2.h>
 #include <map>
+#include <memory>
+#include <boost/shared_ptr.hpp>
 
 using namespace rose;
 using namespace BinaryAnalysis;
@@ -28,16 +30,20 @@ struct BasicBlockSummary {
 		ENDS_IN_RET = 1 << 1
 	};
 
-	StateMap sm;
+	BaseSemantics::StatePtr finalState;
+	BaseSemantics::StatePtr preCallState;
 	uint32_t attributes;
+	rose_addr_t address;
 
 	BasicBlockSummary();
+	BasicBlockSummary(const SgAsmBlock*);
 	BasicBlockSummary(BasicBlockSummary&&);
 	virtual ~BasicBlockSummary();
 
 	BasicBlockSummary& operator=(BasicBlockSummary&&);
-
 };
+
+typedef boost::shared_ptr<BasicBlockSummary> BasicBlockSummaryPtr;
 
 std::ostream& operator<<(std::ostream&, const StateMap&);
 std::ostream& operator<<(std::ostream&, const BasicBlockSummary&);

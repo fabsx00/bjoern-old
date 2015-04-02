@@ -12,6 +12,7 @@
 #include <map>
 #include <iostream>
 #include <utility>
+#include <memory>
 
 #include "PssProcessor.h"
 
@@ -32,18 +33,18 @@ std::ostream& operator<<(std::ostream& os, const SummaryMap& summaryMap) {
 	return os;
 }
 
-BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy) {
+BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(const SgAsmBlock* block) {
 
 	// invoke pre-callback from policy.
 	//// policy->startOfBb(block, disp->get_state());
 	auto statements = block->get_statementList();
 	for (auto statement : statements) {
 		auto instr = isSgAsmInstruction(statement);
-		if (policy->isCall(instr)) {
+		if (tracePolicy->isCall(instr)) {
 			// we don't execute calls.
 			return BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL;
 		}
-		if (policy->isReturn(instr)) {
+		if (tracePolicy->isReturn(instr)) {
 			// we don't execute rets either.
 			return BasicBlockSummary::ATTRIBUTES::ENDS_IN_RET;
 		}
@@ -60,46 +61,47 @@ BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(BaseSemantics::DispatcherP
 	return BasicBlockSummary::ATTRIBUTES::NONE;
 }
 
-void PssProcessor::createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy) {
-	// check if the bb has already been visited for this traces.
+void PssProcessor::trace(const Graph<SgAsmBlock*>::VertexNode* vertex, TracePtr currentTrace)
+{
 	SgAsmBlock* bb = vertex->value();
-	auto& summaryBb = summaries[bb->get_address()];
-	auto& statesBb = summaryBb.sm;
-	mlog[TRACE] << "Processing basic block " << std::hex << bb->get_address() << " in trace " << idTrace << ", ending trace here.\n";
-	if (statesBb.find(idTrace) != statesBb.end()) {
-		// ok, we have been here before in this traces, abort...
-		mlog[DEBUG] << "Looped to basic block "	<< std::hex << bb->get_address() << " in trace " << idTrace << ", ending trace here.\n";
+	BasicBlockSummaryPtr summaryBb (new BasicBlockSummary(bb));
+	if (!currentTrace->addBasicBlock(summaryBb))
+	{
+		// we looped
+		mlog[TRACE] << "Looped to basic block " << std::hex << bb->get_address() << std::endl;
+		collector->addTrace(currentTrace);
 		return;
 	}
 
 	// process bb
-	summaryBb.attributes = processBb(disp, bb, policy);
-	statesBb[idTrace] = disp->get_state()->clone();
-	if (summaryBb.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
+	summaryBb->attributes = processBb(bb);
+	if (summaryBb->attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
 		// apply our calling convention policy.
-		auto preCallState = disp->get_state();
-		policy->derivePostCallState(preCallState);
+		summaryBb->preCallState = disp->get_state()->clone();
+		tracePolicy->derivePostCallState(disp->get_state());
 	}
-	// save the state
-	auto statePassOn = disp->get_state();
-	// and add it to the states map
+	// save the final state.
+	summaryBb->finalState = disp->get_state()->clone();
 
 	// traverse all edges (there should be at most two static ones.)
-	// TODO: how do we handle switch-case statements?
-	size_t tempIdTrace = idTrace;
+	// XXX: how do we handle switch-case statements?
+	size_t nEdges = 0;
 	for (auto& edge : vertex->outEdges()) {
+		// recursively process the next vertex in the trace, fork the state.
 		auto targetVertex = *edge.target();
+		mlog[TRACE] << "Following edge #" << std::dec << nEdges <<  " from basic block " << std::hex << bb->get_address() << std::endl;
 
-		disp->get_operators()->set_state(statePassOn->clone());
-		createTrace(&targetVertex, disp, idTrace, summaries, policy);
-		idTrace++;
+		disp->get_operators()->set_state(summaryBb->finalState->clone());
+		TracePtr forkedTrace(new Trace(*currentTrace));
+		this->trace(&targetVertex, forkedTrace);
+		nEdges++;
 	}
-	// was the id incremented?
-	if (idTrace > tempIdTrace) {
-		// if so, undo the last increment.
-		idTrace--;
+	if (nEdges == 0) {
+		// the trace ended here
+		collector->addTrace(currentTrace);
 	}
 }
+
 
 /*
  * PssProcessor
@@ -145,24 +147,22 @@ void PssProcessor::visit(SgNode *node) {
 	auto startBb = *cfg.findVertex(0);
 	// start trace 0 from the start bb.
 	disp->get_state()->clear();
-	size_t idTrace = 0;
-	SummaryMap summaries;
-	createTrace(&startBb, disp, idTrace, summaries, tracePolicy);
-	// finally, pass the summary map to the collector.
-	collector->addSummaryMap(f->get_name(), std::move(summaries));
+	TracePtr initialTrace(new Trace);
+	trace(&startBb, initialTrace);
 }
 
 void PssProcessor::setTracePolicy(TracePolicy* tracePolicy) {
 	this->tracePolicy = tracePolicy;
 }
 
-void PssProcessor::setCollector(ISummaryMapCollector* collector) {
+void PssProcessor::setCollector(ITraceCollector* collector) {
 	this->collector = collector;
 }
 
 /*
  * TracePolicyX86
  */
+
 
 void TracePolicyX86::startOfBb(const SgAsmBlock* bb, BaseSemantics::StatePtr state) {
 	// anything?

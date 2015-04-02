@@ -31,7 +31,11 @@ std::ostream& operator<<(std::ostream& os, const BasicBlockSummary& bbs) {
 	return os;
 }
 
-BasicBlockSummary::BasicBlockSummary() : attributes(ATTRIBUTES::NONE) {
+BasicBlockSummary::BasicBlockSummary(const SgAsmBlock* bb) : attributes(ATTRIBUTES::NONE) {
+	address = bb->get_address();
+}
+
+BasicBlockSummary::BasicBlockSummary() : attributes(ATTRIBUTES::NONE), address(0) {
 }
 
 BasicBlockSummary::~BasicBlockSummary() {
@@ -39,12 +43,14 @@ BasicBlockSummary::~BasicBlockSummary() {
 
 BasicBlockSummary::BasicBlockSummary(BasicBlockSummary&& other) {
 	attributes = other.attributes;
-	sm = std::move(other.sm);
+	finalState = std::move(other.finalState);
+	preCallState = std::move(other.preCallState);
 }
 
 BasicBlockSummary& BasicBlockSummary::operator=(BasicBlockSummary&& other) {
 	attributes = other.attributes;
-	sm = std::move(other.sm);
+	finalState = std::move(other.finalState);
+	preCallState = std::move(other.preCallState);
 	return *this;
 }
 } /* namespace bjoern */

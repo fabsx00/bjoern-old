@@ -15,6 +15,7 @@
 #include <sawyer/GraphTraversal.h>
 
 #include "BasicBlockSummary.h"
+#include "Trace.h"
 
 using namespace rose;
 using namespace BinaryAnalysis;
@@ -30,10 +31,10 @@ namespace bjoern {
 typedef std::map<rose_addr_t, BasicBlockSummary> SummaryMap;
 std::ostream& operator<<(std::ostream&, const SummaryMap&);
 
-class ISummaryMapCollector {
+class ITraceCollector {
 public:
-	virtual void addSummaryMap(const std::string& function, SummaryMap&& summaries) = 0;
-	virtual ~ISummaryMapCollector() {}
+	virtual void addTrace(TracePtr) = 0;
+	virtual ~ITraceCollector() {}
 };
 
 struct TracePolicy {
@@ -51,19 +52,19 @@ class PssProcessor : public SgSimpleProcessing
 protected:
 	BaseSemantics::DispatcherPtr disp;
 	TracePolicy* tracePolicy;
-	ISummaryMapCollector* collector;
+	ITraceCollector* collector;
 
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr) = 0;
 
-	static BasicBlockSummary::ATTRIBUTES processBb(BaseSemantics::DispatcherPtr disp, const SgAsmBlock* block, TracePolicy* policy);
-	static void createTrace(const Graph<SgAsmBlock*>::VertexNode* vertex, BaseSemantics::DispatcherPtr disp, size_t& idTrace, SummaryMap& summaries, TracePolicy* policy);
+	BasicBlockSummary::ATTRIBUTES processBb(const SgAsmBlock* block);
+	void trace(const Graph<SgAsmBlock*>::VertexNode* vertex, TracePtr currentTrace);
 	static Sawyer::Message::Facility mlog;
 
 public:
 	PssProcessor();
 	virtual ~PssProcessor() {}
 	void setTracePolicy(TracePolicy* tracePolicy);
-	void setCollector(ISummaryMapCollector* collector);
+	void setCollector(ITraceCollector* collector);
 	static void initDiagnostics();
 
 	void visit(SgNode *node);

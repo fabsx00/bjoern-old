@@ -30,12 +30,11 @@ using namespace rose;
 using namespace Diagnostics;
 using namespace bjoern;
 
-class MyCollector : public ISummaryMapCollector {
+class MyCollector : public ITraceCollector {
 	//! Simple Collector that writes all summaries to stdout.
 public:
-	void addSummaryMap(const std::string& function, SummaryMap&& summaries) {
-		std::cout << "*** Function: " << function << " ***\n";
-		std::cout << summaries;
+	void addTrace(TracePtr trace) {
+		std::cout << "todo\n";
 	}
 };
 
