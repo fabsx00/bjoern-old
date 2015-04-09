@@ -27,13 +27,9 @@ using namespace Container;
 
 namespace bjoern {
 
-//! Maps a basic block virtual addresses to a BasicBlockSummary.
-typedef std::map<rose_addr_t, BasicBlockSummary> SummaryMap;
-std::ostream& operator<<(std::ostream&, const SummaryMap&);
-
 class ITraceCollector {
 public:
-	virtual void addTrace(TracePtr) = 0;
+	virtual void addTrace(const SgAsmFunction*, TracePtr) = 0;
 	virtual ~ITraceCollector() {}
 };
 
@@ -53,6 +49,7 @@ protected:
 	BaseSemantics::DispatcherPtr disp;
 	TracePolicy* tracePolicy;
 	ITraceCollector* collector;
+	SgAsmFunction* currentFunction;
 
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr) = 0;
 

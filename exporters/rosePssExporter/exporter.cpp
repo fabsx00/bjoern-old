@@ -12,6 +12,7 @@
 #include <utility>
 #include <iostream>
 #include <vector>
+#include <set>
 
 /* --- BOOST --- */
 //#include <boost/graph/graphviz.hpp>
@@ -31,19 +32,16 @@ using namespace Diagnostics;
 using namespace bjoern;
 
 class MyCollector : public ITraceCollector {
-	//! Simple Collector that writes all summaries to stdout.
 public:
-	void addTrace(TracePtr trace) {
-		std::cout << "todo\n";
+	void addTrace(const SgAsmFunction* func, TracePtr trace) {
+		for (auto summary : trace->summaries) {
+			std::cout << std::hex << summary->address << " -> ";
+		}
+		std::cout << std::endl << std::endl;
 	}
 };
 
 int main(int argc, char** argv) {
-
-	for(int i=0; i<argc; i++) {
-		char* a = argv[i];
-		std::cout << a << std::endl;
-	}
 
 	// init logging
 	Diagnostics::initialize();

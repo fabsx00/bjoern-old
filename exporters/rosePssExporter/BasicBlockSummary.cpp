@@ -10,15 +10,8 @@
 
 namespace bjoern {
 
-std::ostream& operator<<(std::ostream& os, const StateMap& sm) {
-	for (const auto& traceEntry : sm) {
-		os << "Trace: " << traceEntry.first << std::endl;
-		os << *(traceEntry.second) << std::endl;
-	}
-	return os;
-}
-
 std::ostream& operator<<(std::ostream& os, const BasicBlockSummary& bbs) {
+	os << "+++ Basic Block +++\n";
 	os << "Attributes: [";
 	if (bbs.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
 		os << "ENDS_IN_CALL ";
@@ -27,7 +20,13 @@ std::ostream& operator<<(std::ostream& os, const BasicBlockSummary& bbs) {
 			os << "ENDS_IN_RET ";
 	}
 	os << "]\n";
-	os << bbs.sm;
+
+	if (bbs.attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL) {
+		os << "Pre-call state:\n";
+		os << *bbs.preCallState;
+	}
+	os << "Final state:\n";
+	os << *bbs.finalState;
 	return os;
 }
 
@@ -42,6 +41,7 @@ BasicBlockSummary::~BasicBlockSummary() {
 }
 
 BasicBlockSummary::BasicBlockSummary(BasicBlockSummary&& other) {
+	address = other.address;
 	attributes = other.attributes;
 	finalState = std::move(other.finalState);
 	preCallState = std::move(other.preCallState);

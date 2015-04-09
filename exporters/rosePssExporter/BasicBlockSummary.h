@@ -21,8 +21,6 @@ using namespace InstructionSemantics2;
 
 namespace bjoern {
 
-typedef std::map<size_t, BaseSemantics::StatePtr> StateMap;
-
 struct BasicBlockSummary {
 	enum ATTRIBUTES {
 		NONE = 0,
@@ -45,7 +43,6 @@ struct BasicBlockSummary {
 
 typedef boost::shared_ptr<BasicBlockSummary> BasicBlockSummaryPtr;
 
-std::ostream& operator<<(std::ostream&, const StateMap&);
 std::ostream& operator<<(std::ostream&, const BasicBlockSummary&);
 
 } /* namespace bjoern */

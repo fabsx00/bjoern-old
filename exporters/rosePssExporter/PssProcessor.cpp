@@ -23,16 +23,8 @@ namespace bjoern {
 Sawyer::Message::Facility PssProcessor::mlog;
 
 /*
- * Tracing
+ * PssProcessor
  */
-std::ostream& operator<<(std::ostream& os, const SummaryMap& summaryMap) {
-	for (const auto& entry : summaryMap) {
-		os << "+++ Basic block: " << std::hex << entry.first << " +++\n";
-		os << entry.second;
-	}
-	return os;
-}
-
 BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(const SgAsmBlock* block) {
 
 	// invoke pre-callback from policy.
@@ -49,7 +41,7 @@ BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(const SgAsmBlock* block) {
 			return BasicBlockSummary::ATTRIBUTES::ENDS_IN_RET;
 		}
 		try {
-		disp->processInstruction(instr);
+			disp->processInstruction(instr);
 		}
 		catch (BaseSemantics::Exception& e) {
 			mlog[WARN] << "Dispatcher was unable to interpret the instruction '" << e.insn->get_mnemonic()
@@ -69,7 +61,7 @@ void PssProcessor::trace(const Graph<SgAsmBlock*>::VertexNode* vertex, TracePtr 
 	{
 		// we looped
 		mlog[TRACE] << "Looped to basic block " << std::hex << bb->get_address() << std::endl;
-		collector->addTrace(currentTrace);
+		collector->addTrace(currentFunction, currentTrace);
 		return;
 	}
 
@@ -98,14 +90,10 @@ void PssProcessor::trace(const Graph<SgAsmBlock*>::VertexNode* vertex, TracePtr 
 	}
 	if (nEdges == 0) {
 		// the trace ended here
-		collector->addTrace(currentTrace);
+		collector->addTrace(currentFunction, currentTrace);
 	}
 }
 
-
-/*
- * PssProcessor
- */
 void PssProcessor::initDiagnostics() {
 	static bool initialized = false;
 	if (initialized) return;
@@ -114,7 +102,7 @@ void PssProcessor::initDiagnostics() {
 	initialized = true;
 }
 
-PssProcessor::PssProcessor() : tracePolicy(nullptr), collector(nullptr) {
+PssProcessor::PssProcessor() : tracePolicy(nullptr), collector(nullptr), currentFunction(nullptr) {
 	initDiagnostics();
 }
 
@@ -128,13 +116,13 @@ void PssProcessor::visit(SgNode *node) {
 	assert(tracePolicy != nullptr);
 	assert(collector != nullptr);
 
-	SgAsmFunction* f = isSgAsmFunction(node);
-	if (f == NULL) return;
-	if (f->get_address() == INVALID_ADDRESS) {
-		mlog[WARN] << "Skipping invalid function " << f->get_name() << " at " << std::hex << f->get_address() << std::endl;
+	currentFunction = isSgAsmFunction(node);
+	if (currentFunction == NULL) return;
+	if (currentFunction->get_address() == INVALID_ADDRESS) {
+		mlog[WARN] << "Skipping invalid function " << currentFunction->get_name() << " at " << std::hex << currentFunction->get_address() << std::endl;
 		return;
 	}
-	mlog[TRACE] << "Processing function " << f->get_name() << " at " << std::hex << f->get_address() << std::endl;
+	mlog[TRACE] << "Processing function " << currentFunction->get_name() << " at " << std::hex << currentFunction->get_address() << std::endl;
 #if 0
 	// DEBUG: only consider main()
 	if (f->get_name() != "main") return;
@@ -142,7 +130,7 @@ void PssProcessor::visit(SgNode *node) {
 
 	// get CFG of the function and create corresponding DFS traversal.
 	Graph<SgAsmBlock*> cfg;
-	ControlFlow().build_block_cfg_from_ast(f, cfg);
+	ControlFlow().build_block_cfg_from_ast(currentFunction, cfg);
 	// get the start bb.
 	auto startBb = *cfg.findVertex(0);
 	// start trace 0 from the start bb.
