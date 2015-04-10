@@ -7,7 +7,6 @@
 
 #include <rose.h>
 #include <BinaryControlFlow.h>
-#include <PartialSymbolicSemantics2.h>
 #include <DispatcherX86.h>
 #include <map>
 #include <iostream>
@@ -15,6 +14,7 @@
 #include <memory>
 
 #include "PssProcessor.h"
+#include "MyPartialSymbolicSemantics.h"
 
 using namespace Diagnostics;
 
@@ -206,7 +206,7 @@ TracePolicyX86::TracePolicyX86(const BaseSemantics::RiscOperatorsPtr ops) : ops(
  */
 void PssProcessorX86::initDispatcher(const MemoryMap* memMap) {
 	const RegisterDictionary* dictReg = RegisterDictionary::dictionary_pentium4();
-	auto opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
+	auto opsRisc = MyPartialSymbolicSemantics::RiscOperators::instance(dictReg);
 	if (memMap!=nullptr)
 	{
 		opsRisc->set_memory_map(memMap);

@@ -32,12 +32,12 @@ using namespace Diagnostics;
 using namespace bjoern;
 
 class MyCollector : public ITraceCollector {
+	size_t nTraces = 0;
 public:
 	void addTrace(const SgAsmFunction* func, TracePtr trace) {
-		for (auto summary : trace->summaries) {
-			std::cout << std::hex << summary->address << " -> ";
+		if (++nTraces % 100 == 0) {
+			std::cout << "Traces: " << nTraces << "\r";
 		}
-		std::cout << std::endl << std::endl;
 	}
 };
 
