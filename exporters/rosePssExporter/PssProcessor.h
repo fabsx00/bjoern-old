@@ -13,6 +13,8 @@
 #include <Diagnostics.h>
 #include <BaseSemantics2.h>
 #include <sawyer/GraphTraversal.h>
+#include <set>
+#include <map>
 
 #include "BasicBlockSummary.h"
 #include "Trace.h"
@@ -50,6 +52,7 @@ protected:
 	TracePolicy* tracePolicy;
 	ITraceCollector* collector;
 	SgAsmFunction* currentFunction;
+	std::map<rose_addr_t, std::set<rose_addr_t> > edges;
 
 	virtual void initDispatcher(const MemoryMap* memMap=nullptr) = 0;
 

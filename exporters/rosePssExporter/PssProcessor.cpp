@@ -56,12 +56,11 @@ BasicBlockSummary::ATTRIBUTES PssProcessor::processBb(const SgAsmBlock* block) {
 void PssProcessor::trace(const Graph<SgAsmBlock*>::VertexNode* vertex, TracePtr currentTrace)
 {
 	SgAsmBlock* bb = vertex->value();
+	const auto addrBb = bb->get_address();
 	BasicBlockSummaryPtr summaryBb (new BasicBlockSummary(bb));
-	if (!currentTrace->addBasicBlock(summaryBb))
-	{
-		// we looped
-		mlog[TRACE] << "Looped to basic block " << std::hex << bb->get_address() << std::endl;
-		collector->addTrace(currentFunction, currentTrace);
+	if (!currentTrace->addBasicBlock(summaryBb)) {
+		// stop
+		mlog[TRACE] << "Trace stopped at " << std::hex << addrBb << std::endl;
 		return;
 	}
 
@@ -78,18 +77,30 @@ void PssProcessor::trace(const Graph<SgAsmBlock*>::VertexNode* vertex, TracePtr 
 	// traverse all edges (there should be at most two static ones.)
 	// XXX: how do we handle switch-case statements?
 	size_t nEdges = 0;
+	auto& edgesBb = edges[addrBb];
 	for (auto& edge : vertex->outEdges()) {
 		// recursively process the next vertex in the trace, fork the state.
 		auto targetVertex = *edge.target();
-		mlog[TRACE] << "Following edge #" << std::dec << nEdges <<  " from basic block " << std::hex << bb->get_address() << std::endl;
-
+		const auto addrTargetBb = targetVertex.value()->get_address();
+		// do we know this edge already?
+		if (edgesBb.find(addrTargetBb) != edgesBb.end()) {
+			mlog[TRACE] << "Skipping edge from " << std::hex << addrBb << " to " << addrTargetBb << std::endl;
+			continue;
+		}
+		// add the edge.
+		edgesBb.insert(addrTargetBb);
+		mlog[TRACE] << "Following edge from " << std::hex << addrBb << " to " << addrTargetBb << std::endl;
+		// clone the state.
 		disp->get_operators()->set_state(summaryBb->finalState->clone());
+		// fork the trace.
 		TracePtr forkedTrace(new Trace(*currentTrace));
+		// trace recursively.
 		this->trace(&targetVertex, forkedTrace);
 		nEdges++;
 	}
 	if (nEdges == 0) {
 		// the trace ended here
+		mlog[TRACE] << "Trace ended at " << std::hex << addrBb << std::endl;
 		collector->addTrace(currentFunction, currentTrace);
 	}
 }
@@ -128,14 +139,14 @@ void PssProcessor::visit(SgNode *node) {
 	if (f->get_name() != "main") return;
 #endif
 
-	// get CFG of the function and create corresponding DFS traversal.
-	Graph<SgAsmBlock*> cfg;
-	ControlFlow().build_block_cfg_from_ast(currentFunction, cfg);
-	// get the start bb.
-	auto startBb = *cfg.findVertex(0);
-	// start trace 0 from the start bb.
+	// reset the context
+	edges.clear();
 	disp->get_state()->clear();
 	TracePtr initialTrace(new Trace);
+	// start tracing from the start bb.
+	Graph<SgAsmBlock*> cfg;
+	ControlFlow().build_block_cfg_from_ast(currentFunction, cfg);
+	auto startBb = *cfg.findVertex(0);
 	trace(&startBb, initialTrace);
 }
 
