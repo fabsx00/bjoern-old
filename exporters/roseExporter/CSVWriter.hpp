@@ -1,7 +1,9 @@
 #ifndef _CSV_WRITER_HPP
 #define _CSV_WRITER_HPP
 
+#include "BasicBlockSummary.hpp"
 #include "bjoernNodes.hpp"
+
 #include <rose.h>
 
 #include <fstream>
@@ -9,6 +11,7 @@
 #include <list>
 
 using namespace std;
+using namespace bjoern;
 
 class CSVWriter
 {
@@ -18,7 +21,8 @@ public:
 
 	void init();
 	void writeFunction(BjoernFunctionNode *func);
-	void writeTrace(list<rose_addr_t> &path, BjoernFunctionNode *funcNode);
+	void writeTrace(list<rose_addr_t> &path, BjoernFunctionNode *funcNode,
+			map<uint64_t, BasicBlockSummary *> summaries);
 
 private:
 	unsigned long long curId;
@@ -44,7 +48,8 @@ private:
 	void writeInstructionsOfFunc(BjoernFunctionNode *func);
 	void writeInstruction(BjoernInstructionNode *instr);
 
-	void writeSymbolNodes(list<rose_addr_t> &path);
+	void writeSymbolNodes(list<rose_addr_t> &path,
+			      map<uint64_t, BasicBlockSummary *> summaries);
 
 	void connectFunctionToEntryBlock(BjoernFunctionNode *func);
 	void connectBasicBlocksViaControlFlow(BjoernFunctionNode *func);

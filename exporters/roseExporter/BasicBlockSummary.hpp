@@ -20,18 +20,6 @@ using namespace std;
 
 namespace bjoern {
 
-struct BasicBlockState{
-
-	/**
-	   These are smart pointers, so don't need to
-	   and should not attempt to free them.
-	*/
-
-	BaseSemantics::StatePtr finalState;
-	BaseSemantics::StatePtr preCallState;
-};
-
-
 struct BasicBlockSummary {
 	enum ATTRIBUTES {
 		NONE = 0,
@@ -39,22 +27,26 @@ struct BasicBlockSummary {
 		ENDS_IN_RET = 1 << 1
 	};
 
-	list<BasicBlockState> stateList;
+	list<BaseSemantics::StatePtr> finalStateList;
+	list<BaseSemantics::StatePtr> preCallStateList;
+
 	uint32_t attributes;
 
 	BasicBlockSummary();
 	void pushState(BaseSemantics::StatePtr final,
-		      BaseSemantics::StatePtr preCall)
+		       BaseSemantics::StatePtr preCall)
 	{
-		BasicBlockState s;
-		s.finalState = final;
-		s.preCallState = preCall;
-		stateList.push_back(s);
+		// finalStateList.push_back(final);
+		// BasicBlockState s;
+		// s.finalState = final;
+		// s.preCallState = preCall;
+		// stateList.push_back(s);
 	}
 
 	void popState()
 	{
-		stateList.pop_back();
+	      // finalStateList.pop_back();
+	     // stateList.pop_back();
 	}
 
 	virtual ~BasicBlockSummary();

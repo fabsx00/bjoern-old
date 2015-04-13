@@ -144,12 +144,12 @@ protected:
 		for (auto& edge : vertex->outEdges()) {
 
 			uint64_t edgeId = edgeToId(edge);
-			visited[edgeId] = true;
 
 			if(isTerminatingEdge(edge, edgeId)){
 				continue;
 			}
 
+			visited[edgeId] = true;
 			nEdgesExpanded ++;
 			auto targetVertex = *edge.target();
 
@@ -165,7 +165,7 @@ protected:
 		if(nEdgesExpanded == 0){
 			// reached a node where no more edges
 			// were expandable.
-			writer->writeTrace(path, curFunctionNode);
+			writer->writeTrace(path, curFunctionNode, summaries);
 		}
 
 		removeEntryInBasicBlockSummary(bb);
@@ -205,6 +205,10 @@ protected:
 
 	void removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock)
 	{
+		if(summaries.find(curBBAddress) == summaries.end()){
+			cout << "This should not happen" << endl;
+		}
+
 		summaries[curBBAddress]->popState();
 	}
 
