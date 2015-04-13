@@ -81,7 +81,7 @@ public:
 		BjoernFunctionNode *bjoernFunc = createBjoernFuncFromSgFunc(func);
 		writer.writeFunction(bjoernFunc);
 		// this will call the writer internally
-		useDefAnalyzer.analyze(func);
+		useDefAnalyzer.analyze(func, bjoernFunc);
 		delete bjoernFunc;
 	}
 

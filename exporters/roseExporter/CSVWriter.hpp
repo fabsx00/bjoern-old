@@ -18,7 +18,7 @@ public:
 
 	void init();
 	void writeFunction(BjoernFunctionNode *func);
-	void writeTrace(list<rose_addr_t> &path);
+	void writeTrace(list<rose_addr_t> &path, BjoernFunctionNode *funcNode);
 
 private:
 	unsigned long long curId;

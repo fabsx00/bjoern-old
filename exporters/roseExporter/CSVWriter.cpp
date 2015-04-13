@@ -48,7 +48,7 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 
 }
 
-void CSVWriter :: writeTrace(list<rose_addr_t> &path)
+void CSVWriter :: writeTrace(list<rose_addr_t> &path, BjoernFunctionNode *func)
 {
 	writeSymbolNodes(path);
 	connectBasicBlocksToSymbols(path);

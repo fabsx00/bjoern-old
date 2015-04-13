@@ -47,6 +47,7 @@ protected:
 	list<rose_addr_t> path;
 	map<uint64_t, BasicBlockSummary *> summaries;
 	rose_addr_t curBBAddress;
+	BjoernFunctionNode *curFunctionNode;
 
 	CSVWriter *writer;
 
@@ -164,7 +165,7 @@ protected:
 		if(nEdgesExpanded == 0){
 			// reached a node where no more edges
 			// were expandable.
-			writer->writeTrace(path);
+			writer->writeTrace(path, curFunctionNode);
 		}
 
 		removeEntryInBasicBlockSummary(bb);
@@ -275,11 +276,12 @@ public:
 		writer = aWriter;
 	}
 
-	void analyze(SgAsmFunction *func)
+	void analyze(SgAsmFunction *func, BjoernFunctionNode *funcNode)
 	{
 		Graph<SgAsmBlock*> cfg;
 		ControlFlow().build_block_cfg_from_ast(func, cfg);
 
+		curFunctionNode = funcNode;
 		auto entryNode = *cfg.findVertex(0);
 		traceCFG(&entryNode);
 	}
