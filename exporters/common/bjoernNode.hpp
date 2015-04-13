@@ -36,4 +36,24 @@ public:
 
 };
 
+class BjoernCodeNode : public BjoernNode {
+protected:
+	string code;
+public:
+	BjoernCodeNode() : BjoernNode() { }
+
+	void setCode(string str)
+	{
+		code = str;
+	}
+
+	const string & getCode()
+	{
+		return code;
+	}
+
+	virtual ~BjoernCodeNode(){}
+};
+
+
 #endif

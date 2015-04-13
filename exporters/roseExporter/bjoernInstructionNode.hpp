@@ -1,24 +1,11 @@
 #ifndef _BJOERN_INSTRUCTION_NODE_HPP
 #define _BJOERN_INSTRUCTION_NODE_HPP
 
-class BjoernInstructionNode : public BjoernNode {
-private:
-	string code;
-
+class BjoernInstructionNode : public BjoernCodeNode {
 public:
-	BjoernInstructionNode() : BjoernNode()
+	BjoernInstructionNode() : BjoernCodeNode()
 	{
 		type = "Instruction";
-	}
-
-	void setCode(string str)
-	{
-		code = str;
-	}
-
-	const string & getCode()
-	{
-		return code;
 	}
 
 };

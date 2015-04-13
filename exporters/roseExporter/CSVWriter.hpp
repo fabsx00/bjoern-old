@@ -21,8 +21,6 @@ public:
 
 	void init();
 	void writeFunction(BjoernFunctionNode *func);
-	void writeTrace(list<rose_addr_t> &path, BjoernFunctionNode *funcNode,
-			map<uint64_t, BasicBlockSummary *> summaries);
 
 private:
 	unsigned long long curId;
@@ -48,16 +46,11 @@ private:
 	void writeInstructionsOfFunc(BjoernFunctionNode *func);
 	void writeInstruction(BjoernInstructionNode *instr);
 
-	void writeSymbolNodes(list<rose_addr_t> &path,
-			      map<uint64_t, BasicBlockSummary *> summaries);
-
 	void connectFunctionToEntryBlock(BjoernFunctionNode *func);
 	void connectBasicBlocksViaControlFlow(BjoernFunctionNode *func);
 	void connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock);
 	void connectBasicBlocksToInstructions(BjoernFunctionNode *func);
 	void connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basicBlock);
-
-	void connectBasicBlocksToSymbols(list<rose_addr_t> &path);
 
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);

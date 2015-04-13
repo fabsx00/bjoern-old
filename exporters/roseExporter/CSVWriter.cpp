@@ -48,29 +48,16 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 
 }
 
-void CSVWriter :: writeTrace(list<rose_addr_t> &path,
-			     BjoernFunctionNode *func,
-			     map<uint64_t, BasicBlockSummary *> summaries)
-{
-	writeSymbolNodes(path, summaries);
-	connectBasicBlocksToSymbols(path);
-}
+// void CSVWriter :: writeSymbolNodes(list<rose_addr_t> &path,
+// 				   map<uint64_t, BasicBlockSummary *> summaries)
+// {
+	
+// 	for(auto it = path.begin(); it != path.end(); it++){		
+// 		auto addr = *it;		
+// 		cout << *(summaries[addr]->finalStateList.back()->get_memory_state()) << endl;
+// 	}
+// }
 
-void CSVWriter :: writeSymbolNodes(list<rose_addr_t> &path,
-				   map<uint64_t, BasicBlockSummary *> summaries)
-{
-	cout << path.size() << endl;
- 	
-	for(auto it = path.begin(); it != path.end(); it++){
-		auto addr = *it;
-		// cout << summaries[addr] << endl;
-	}
-}
-
-void CSVWriter :: connectBasicBlocksToSymbols(list<rose_addr_t> &path)
-{
-
-}
 
 // Private
 
