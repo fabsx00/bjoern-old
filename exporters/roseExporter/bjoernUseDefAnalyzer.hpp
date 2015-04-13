@@ -168,6 +168,7 @@ protected:
 			writer->writeTrace(path, curFunctionNode, summaries);
 		}
 
+		curBBAddress = path.back();
 		removeEntryInBasicBlockSummary(bb);
 	}
 
@@ -186,6 +187,7 @@ protected:
 
 	void updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes)
 	{
+
 		// If a state does not exist for this block yet,
 		// create it.
 		if(summaries.find(curBBAddress) == summaries.end()){
@@ -200,11 +202,12 @@ protected:
 			finalState = disp->get_state()->clone();
 		}
 
-		summaries[curBBAddress]->pushState(preCallState, finalState);
+		summaries[curBBAddress]->pushState(finalState, preCallState);
 	}
 
 	void removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock)
 	{
+
 		if(summaries.find(curBBAddress) == summaries.end()){
 			cout << "This should not happen" << endl;
 		}

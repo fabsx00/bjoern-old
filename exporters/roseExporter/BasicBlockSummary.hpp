@@ -36,17 +36,19 @@ struct BasicBlockSummary {
 	void pushState(BaseSemantics::StatePtr final,
 		       BaseSemantics::StatePtr preCall)
 	{
-		// finalStateList.push_back(final);
-		// BasicBlockState s;
-		// s.finalState = final;
-		// s.preCallState = preCall;
-		// stateList.push_back(s);
+		finalStateList.push_back(final);
+		preCallStateList.push_back(preCall);
 	}
 
 	void popState()
 	{
-	      // finalStateList.pop_back();
-	     // stateList.pop_back();
+		if(preCallStateList.size() == 0){
+			cout << "This should not happen either" << endl;
+			return;
+		}
+
+		finalStateList.pop_back();
+		preCallStateList.pop_back();
 	}
 
 	virtual ~BasicBlockSummary();
