@@ -191,11 +191,8 @@ protected:
 		}
 
 		// -- CONTINUE HERE --
-
-		// A block may be reached more than once in a single
-		// trace, so we add the state to a list instead of
-		// overwriting it.
-
+		auto state = disp->get_state()->clone();
+		summaries[curBBAddress]->addState(state, state);
 	}
 
 	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock)

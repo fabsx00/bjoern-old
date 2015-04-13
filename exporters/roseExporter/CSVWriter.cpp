@@ -48,14 +48,20 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 
 }
 
-/**
-   Write the trace and clear basic block
-   information while at it.
-*/
-
 void CSVWriter :: writeTrace(list<rose_addr_t> &path)
 {
-	cout << "reached" << endl;
+	writeSymbolNodes(path);
+	connectBasicBlocksToSymbols(path);
+}
+
+void CSVWriter :: writeSymbolNodes(list<rose_addr_t> &path)
+{
+
+}
+
+void CSVWriter :: connectBasicBlocksToSymbols(list<rose_addr_t> &path)
+{
+
 }
 
 // Private

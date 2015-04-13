@@ -44,11 +44,15 @@ private:
 	void writeInstructionsOfFunc(BjoernFunctionNode *func);
 	void writeInstruction(BjoernInstructionNode *instr);
 
+	void writeSymbolNodes(list<rose_addr_t> &path);
+
 	void connectFunctionToEntryBlock(BjoernFunctionNode *func);
 	void connectBasicBlocksViaControlFlow(BjoernFunctionNode *func);
 	void connectBasicBlockToSuccessors(BjoernBasicBlockNode *basicBlock);
 	void connectBasicBlocksToInstructions(BjoernFunctionNode *func);
 	void connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basicBlock);
+
+	void connectBasicBlocksToSymbols(list<rose_addr_t> &path);
 
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);

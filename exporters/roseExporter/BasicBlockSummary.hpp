@@ -21,6 +21,12 @@ using namespace std;
 namespace bjoern {
 
 struct BasicBlockState{
+
+	/**
+	   These are smart pointers, so don't need to
+	   and should not attempt to free them.
+	*/
+
 	BaseSemantics::StatePtr finalState;
 	BaseSemantics::StatePtr preCallState;
 };
@@ -34,12 +40,19 @@ struct BasicBlockSummary {
 	};
 
 	list<BasicBlockState> stateList;
-
 	uint32_t attributes;
 
 	BasicBlockSummary();
-	virtual ~BasicBlockSummary();
+	void addState(BaseSemantics::StatePtr final,
+		      BaseSemantics::StatePtr preCall)
+	{
+		BasicBlockState s;
+		s.finalState = final;
+		s.preCallState = preCall;
+		stateList.push_back(s);
+	}
 
+	virtual ~BasicBlockSummary();
 };
 
 } /* namespace bjoern */
