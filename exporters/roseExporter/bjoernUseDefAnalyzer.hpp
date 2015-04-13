@@ -20,6 +20,7 @@
 #include "CSVWriter.hpp"
 #include "tracePolicy.hpp"
 #include "BasicBlockSummary.hpp"
+#include "MyPartialSymbolicSemantics.h"
 
 using namespace rose;
 using namespace rose::BinaryAnalysis;
@@ -79,7 +80,7 @@ protected:
 	void initDispatcher()
 	{
 		dictReg = RegisterDictionary::dictionary_pentium4();
-		opsRisc = PartialSymbolicSemantics::RiscOperators::instance(dictReg);
+		opsRisc = MyPartialSymbolicSemantics::RiscOperators::instance(dictReg);
 		opsRisc->set_memory_map(&memoryMap);
 		disp = DispatcherX86::instance(opsRisc);
 	}

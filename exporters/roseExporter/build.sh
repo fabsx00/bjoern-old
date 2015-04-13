@@ -10,4 +10,6 @@ g++ -std=c++11 -I/home/bjoern/rose/include -I/home/bjoern/rose/include/rose -I/h
 
 g++ -std=c++11 -I/home/bjoern/rose/include -I/home/bjoern/rose/include/rose -I/home/bjoern/boost_47_153/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"TracePolicy.d" -MT"TracePolicy.d" -o "TracePolicy.o" "TracePolicy.cpp"
 
-g++ -std=c++11 -L/home/bjoern/boost_47_153/lib -L/home/bjoern/rose/lib -o "exporter"  ./exporter.o ./CSVWriter.o ./bjoernNode.o ./BasicBlockSummary.o ./TracePolicy.o -lrose -lboost_thread -lboost_filesystem -lboost_wave -lboost_iostreams -lboost_system -lboost_regex
+g++ -std=c++11 -I/home/bjoern/rose/include -I/home/bjoern/rose/include/rose -I/home/bjoern/boost_47_153/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"MyPartialSymbolicSemantics.d" -MT"MyPartialSymbolicSemantics.d" -o "MyPartialSymbolicSemantics.o" "MyPartialSymbolicSemantics.cpp"
+
+g++ -std=c++11 -L/home/bjoern/boost_47_153/lib -L/home/bjoern/rose/lib -o "exporter"  ./exporter.o ./CSVWriter.o ./bjoernNode.o ./BasicBlockSummary.o ./TracePolicy.o ./MyPartialSymbolicSemantics.o -lrose -lboost_thread -lboost_filesystem -lboost_wave -lboost_iostreams -lboost_system -lboost_regex
