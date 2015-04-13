@@ -159,7 +159,7 @@ protected:
 			traceCFG_r(&targetVertex, disp);
 			path.pop_back();
 
-			visited.erase(edgeId);
+			// visited.erase(edgeId);
 		}
 
 		if(nEdgesExpanded == 0){
