@@ -43,13 +43,18 @@ struct BasicBlockSummary {
 	uint32_t attributes;
 
 	BasicBlockSummary();
-	void addState(BaseSemantics::StatePtr final,
+	void pushState(BaseSemantics::StatePtr final,
 		      BaseSemantics::StatePtr preCall)
 	{
 		BasicBlockState s;
 		s.finalState = final;
 		s.preCallState = preCall;
 		stateList.push_back(s);
+	}
+
+	void popState()
+	{
+		stateList.pop_back();
 	}
 
 	virtual ~BasicBlockSummary();

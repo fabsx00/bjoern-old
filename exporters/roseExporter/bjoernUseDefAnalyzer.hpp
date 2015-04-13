@@ -146,7 +146,6 @@ protected:
 			visited[edgeId] = true;
 
 			if(isTerminatingEdge(edge, edgeId)){
-				// call 'complete' function
 				continue;
 			}
 
@@ -167,6 +166,8 @@ protected:
 			// were expandable.
 			writer->writeTrace(path);
 		}
+
+		removeEntryInBasicBlockSummary(bb);
 	}
 
 	/**
@@ -190,10 +191,22 @@ protected:
 			summaries[curBBAddress] = new BasicBlockSummary;
 		}
 
-		// -- CONTINUE HERE --
-		auto state = disp->get_state()->clone();
-		summaries[curBBAddress]->addState(state, state);
+		auto preCallState = disp->get_state()->clone();
+		auto finalState = preCallState;
+
+		if(attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL){
+			tp->derivePostCallState(disp->get_state());
+			finalState = disp->get_state()->clone();
+		}
+
+		summaries[curBBAddress]->pushState(preCallState, finalState);
 	}
+
+	void removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock)
+	{
+		summaries[curBBAddress]->popState();
+	}
+
 
 	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock)
 	{
