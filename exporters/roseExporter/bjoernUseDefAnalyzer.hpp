@@ -192,6 +192,10 @@ protected:
 
 		// -- CONTINUE HERE --
 
+		// A block may be reached more than once in a single
+		// trace, so we add the state to a list instead of
+		// overwriting it.
+
 	}
 
 	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock)

@@ -10,16 +10,21 @@
 
 #include <rose.h>
 #include <BaseSemantics2.h>
-#include <map>
+#include <list>
 
 using namespace rose;
 using namespace BinaryAnalysis;
 using namespace InstructionSemantics2;
+using namespace std;
 
 
 namespace bjoern {
 
-typedef std::map<size_t, BaseSemantics::StatePtr> StateMap;
+struct BasicBlockState{
+	BaseSemantics::StatePtr finalState;
+	BaseSemantics::StatePtr preCallState;
+};
+
 
 struct BasicBlockSummary {
 	enum ATTRIBUTES {
@@ -28,19 +33,14 @@ struct BasicBlockSummary {
 		ENDS_IN_RET = 1 << 1
 	};
 
-	StateMap sm;
+	list<BasicBlockState> stateList;
+
 	uint32_t attributes;
 
 	BasicBlockSummary();
-	BasicBlockSummary(BasicBlockSummary&&);
 	virtual ~BasicBlockSummary();
 
-	BasicBlockSummary& operator=(BasicBlockSummary&&);
-
 };
-
-std::ostream& operator<<(std::ostream&, const StateMap&);
-std::ostream& operator<<(std::ostream&, const BasicBlockSummary&);
 
 } /* namespace bjoern */
 
