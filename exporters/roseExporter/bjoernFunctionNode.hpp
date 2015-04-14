@@ -38,9 +38,17 @@ public:
 
 	void addSymbol(string &symbol)
 	{
-		// TODO
-		// only add symbol if it doesn't
-		// already exist in `symbolToNode`
+		// Return if symbol is already
+		// registered
+
+		auto it = symbolToNode.find(symbol);
+		if(it != symbolToNode.end())
+			return;
+
+		BjoernSymbolNode *symbolNode = new BjoernSymbolNode();
+		symbolNode->setAddr(symbol);
+		symbolToNode[symbol] = symbolNode;
+
 	}
 
 	BjoernBasicBlockNode *getBasicBlockByAddr(const string &addr)
@@ -54,6 +62,11 @@ public:
 	const list<BjoernBasicBlockNode *> & getBasicBlocks()
 	{
 		return basicBlocks;
+	}
+
+	map<string, BjoernSymbolNode *> & getSymbolToNode()
+	{
+		return symbolToNode;
 	}
 
 	BjoernBasicBlockNode *getEntryBlock() const

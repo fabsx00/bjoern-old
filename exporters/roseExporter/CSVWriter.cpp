@@ -41,10 +41,12 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 	func->setFunctionIdOfChildren();
 	writeBasicBlocksOfFunc(func);
 	writeInstructionsOfFunc(func);
+	writeSymbolsOfFunc(func);
 
 	connectFunctionToEntryBlock(func);
 	connectBasicBlocksViaControlFlow(func);
 	connectBasicBlocksToInstructions(func);
+	connectBasicBlocksToSymbols(func);
 
 }
 
@@ -135,6 +137,18 @@ void CSVWriter :: writeBasicBlocksOfFunc(BjoernFunctionNode *func)
 
 }
 
+void CSVWriter :: writeSymbolsOfFunc(BjoernFunctionNode *func)
+{
+	map<string, BjoernSymbolNode *> symbolToNode = func->getSymbolToNode();
+	for(auto it : symbolToNode){
+		// auto sym = it->first;
+		auto node = it.second;
+		writeBjoernNode(node);
+		nodeFile << endl;
+		finishNode(node);
+	}
+}
+
 void CSVWriter :: connectFunctionToEntryBlock(BjoernFunctionNode *func)
 {
 	unsigned long long srcId = func->getId();
@@ -208,6 +222,10 @@ void CSVWriter :: connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basic
 	}
 }
 
+void CSVWriter :: connectBasicBlocksToSymbols(BjoernFunctionNode *func)
+{
+// TODO
+}
 
 void CSVWriter :: writeEdge(unsigned long long srcId, unsigned long long dstId,
 		const char *edgeType)
