@@ -144,5 +144,5 @@ BjoernInstructionNode * MyProcessor :: createBjoernInstructionFromSgInstruction(
 void MyProcessor :: handleTrace(list<rose_addr_t> &path,
 				map<uint64_t, BasicBlockSummary *> & summaries)
 {
-	
+	cout << "Handle Trace" << endl; 
 }
