@@ -1,4 +1,3 @@
-
 #include "MyProcessor.hpp"
 #include "bjoernUseDefAnalyzer.hpp"
 
@@ -117,7 +116,6 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 	if(nEdgesExpanded == 0){
 		// reached a node where no more edges
 		// were expandable.
-		// writer->writeTrace(path, curFunctionNode, summaries);
 		processor->handleTrace(path, summaries);
 	}
 
@@ -238,12 +236,10 @@ void BjoernUseDefAnalyzer :: setProcessor(MyProcessor *proc)
 	processor = proc;
 }
 
-void BjoernUseDefAnalyzer :: analyze(SgAsmFunction *func, BjoernFunctionNode *funcNode)
+void BjoernUseDefAnalyzer :: analyze(SgAsmFunction *func)
 {
 	Graph<SgAsmBlock*> cfg;
 	ControlFlow().build_block_cfg_from_ast(func, cfg);
-
-	curFunctionNode = funcNode;
 	auto entryNode = *cfg.findVertex(0);
 	traceCFG(&entryNode);
 }

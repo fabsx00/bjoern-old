@@ -11,6 +11,7 @@
 #include <rose.h>
 #include <BaseSemantics2.h>
 #include <list>
+#include <memory>
 
 using namespace rose;
 using namespace BinaryAnalysis;
@@ -20,39 +21,49 @@ using namespace std;
 
 namespace bjoern {
 
-struct BasicBlockSummary {
-	enum ATTRIBUTES {
-		NONE = 0,
-		ENDS_IN_CALL = 1,
-		ENDS_IN_RET = 1 << 1
+	class MemAndRegisterState{
+	private:
+		BaseSemantics::StatePtr finalState;
+		BaseSemantics::StatePtr preCallState;
+	public:
+		MemAndRegisterState(BaseSemantics::StatePtr final,
+				    BaseSemantics::StatePtr pre):
+			finalState(final), preCallState(pre){}
+
 	};
 
-	list<BaseSemantics::StatePtr> finalStateList;
-	list<BaseSemantics::StatePtr> preCallStateList;
 
-	uint32_t attributes;
+	struct BasicBlockSummary {
+		enum ATTRIBUTES {
+			NONE = 0,
+			ENDS_IN_CALL = 1,
+			ENDS_IN_RET = 1 << 1
+		};
 
-	BasicBlockSummary();
-	void pushState(BaseSemantics::StatePtr final,
-		       BaseSemantics::StatePtr preCall)
-	{
-		finalStateList.push_back(final);
-		preCallStateList.push_back(preCall);
-	}
+		list<unique_ptr<MemAndRegisterState>> stateList;
 
-	void popState()
-	{
-		if(preCallStateList.size() == 0){
-			cout << "This should not happen either" << endl;
-			return;
+		uint32_t attributes;
+
+		BasicBlockSummary();
+		void pushState(BaseSemantics::StatePtr final,
+			       BaseSemantics::StatePtr preCall)
+		{
+			unique_ptr<MemAndRegisterState> ptr(new MemAndRegisterState(final, preCall));
+			stateList.push_back(move(ptr));
 		}
 
-		finalStateList.pop_back();
-		preCallStateList.pop_back();
-	}
+		void popState()
+		{
+			if(stateList.size() == 0){
+				cout << "This should not happen either" << endl;
+				return;
+			}
 
-	virtual ~BasicBlockSummary();
-};
+			stateList.pop_back();
+		}
+
+		virtual ~BasicBlockSummary();
+	};
 
 } /* namespace bjoern */
 

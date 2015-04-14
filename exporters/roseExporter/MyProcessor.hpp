@@ -46,6 +46,7 @@ class MyProcessor : public SgSimpleProcessing
 private:
 	CSVWriter writer;
 	BjoernUseDefAnalyzer useDefAnalyzer;	
+	BjoernFunctionNode *curFunction;
 public:
 	MyProcessor() : SgSimpleProcessing() {}
 	virtual ~MyProcessor();
@@ -60,6 +61,10 @@ public:
 	BjoernInstructionNode *createBjoernInstructionFromSgInstruction(SgAsmInstruction *instr);
 	void handleTrace(list<rose_addr_t> &path,
 			 map<uint64_t, BasicBlockSummary *> & summaries);
+
+	void handleBasicBlockAt(rose_addr_t addr,
+				map<uint64_t, BasicBlockSummary *> & summaries);
+
 };
 
 #endif

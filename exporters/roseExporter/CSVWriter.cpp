@@ -48,17 +48,6 @@ void CSVWriter :: writeFunction(BjoernFunctionNode *func)
 
 }
 
-// void CSVWriter :: writeSymbolNodes(list<rose_addr_t> &path,
-// 				   map<uint64_t, BasicBlockSummary *> summaries)
-// {
-	
-// 	for(auto it = path.begin(); it != path.end(); it++){		
-// 		auto addr = *it;		
-// 		cout << *(summaries[addr]->finalStateList.back()->get_memory_state()) << endl;
-// 	}
-// }
-
-
 // Private
 
 void CSVWriter :: openOutputFiles()

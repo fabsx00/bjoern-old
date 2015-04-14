@@ -16,7 +16,6 @@
 #include <Cxx_Grammar.h>
 #include <BinaryCallingConvention.h>
 
-#include "bjoernNodes.hpp"
 #include "tracePolicy.hpp"
 #include "BasicBlockSummary.hpp"
 #include "MyPartialSymbolicSemantics.h"
@@ -49,35 +48,34 @@ protected:
 	list<rose_addr_t> path;
 	map<uint64_t, BasicBlockSummary *> summaries;
 	rose_addr_t curBBAddress;
-	BjoernFunctionNode *curFunctionNode;
 
 	MyProcessor *processor;
 
 	void initMemoryMap(const SgAsmGenericFile *asmFile);
 	void initDispatcher();
 	void initTracePolicy();
-	
-	void traceCFG(const Graph<SgAsmBlock*>::VertexNode* entryNode);	
-	void clearSummaries();   
+
+	void traceCFG(const Graph<SgAsmBlock*>::VertexNode* entryNode);
+	void clearSummaries();
 	bool isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge,
 			       uint64_t edgeId);
-	
+
 	void traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* vertex,
 			BaseSemantics::DispatcherPtr disp);
-	
-	void processBasicBlock(SgAsmBlock *basicBlock);	
-	void updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes);	
+
+	void processBasicBlock(SgAsmBlock *basicBlock);
+	void updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes);
 	void removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock);
 	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock);
 	void processInstruction(SgAsmInstruction *instr);
 	uint64_t edgeToId(Graph<SgAsmBlock*>::EdgeNode edge);
 	rose_addr_t getAddressForNode(Graph<SgAsmBlock*>::VertexNode node);
-			
+
 
 public:
 	void init(const SgAsmGenericFile* asmFile);
 	void setProcessor(MyProcessor *proc);
-	void analyze(SgAsmFunction *func, BjoernFunctionNode *funcNode);	
+	void analyze(SgAsmFunction *func);
 
 };
 
