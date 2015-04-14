@@ -116,11 +116,54 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 	if(nEdgesExpanded == 0){
 		// reached a node where no more edges
 		// were expandable.
-		processor->handleTrace(path, summaries);
+		registerTrace();
 	}
 
 	curBBAddress = path.back();
 	removeEntryInBasicBlockSummary(bb);
+}
+
+void BjoernUseDefAnalyzer :: registerTrace()
+{
+	// path : current path
+	// summaries : BasicBlockSummaries
+	// curFuncNode: The node to write to
+
+	for(auto addr : path){
+		registerStateOfBasicBlock(addr);
+	}
+
+}
+
+void BjoernUseDefAnalyzer :: registerStateOfBasicBlock(rose_addr_t addr)
+{
+	BasicBlockSummary *summary = summaries[addr];
+	addSymbolsToFunctionNode(summary);
+}
+
+void BjoernUseDefAnalyzer :: addSymbolsToFunctionNode(BasicBlockSummary *summary)
+{
+	list<string> symbols;
+
+	summary->getUsedRegisters(symbols);
+	for(auto sym : symbols)
+		curFuncNode -> addSymbol(sym);
+	symbols.clear();
+
+	summary->getDefinedRegisters(symbols);
+	for(auto sym : symbols)
+		curFuncNode -> addSymbol(sym);
+	symbols.clear();
+
+	summary->getUsedMemory(symbols);
+	for(auto sym : symbols)
+		curFuncNode -> addSymbol(sym);
+	symbols.clear();
+
+	summary->getDefinedMemory(symbols);
+	for(auto sym : symbols)
+		curFuncNode -> addSymbol(sym);
+	symbols.clear();
 }
 
 
@@ -231,15 +274,17 @@ void BjoernUseDefAnalyzer :: init(const SgAsmGenericFile* asmFile)
 	initTracePolicy();
 }
 
-void BjoernUseDefAnalyzer :: setProcessor(MyProcessor *proc)
-{
-	processor = proc;
-}
+/**
+   Analyze 'func' and write resulting nodes to
+   'bjoernFuncNode'.
+*/
 
-void BjoernUseDefAnalyzer :: analyze(SgAsmFunction *func)
+void BjoernUseDefAnalyzer :: analyze(SgAsmFunction *func,
+				     BjoernFunctionNode *bjoernFuncNode)
 {
 	Graph<SgAsmBlock*> cfg;
 	ControlFlow().build_block_cfg_from_ast(func, cfg);
+	curFuncNode = bjoernFuncNode;
 	auto entryNode = *cfg.findVertex(0);
 	traceCFG(&entryNode);
 }

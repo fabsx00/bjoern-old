@@ -34,4 +34,24 @@ namespace bjoern {
 		stateList.pop_back();
 	}
 
+	void BasicBlockSummary :: getUsedRegisters(list<string> &out)
+	{
+		// TODO
+	}
+
+	void BasicBlockSummary :: getUsedMemory(list<string> &out)
+	{
+		// TODO
+	}
+
+	void BasicBlockSummary :: getDefinedRegisters(list<string> &out)
+	{
+		// TODO
+	}
+
+	void BasicBlockSummary :: getDefinedMemory(list<string> &out)
+	{
+		// TODO
+	}
+
 } /* namespace bjoern */

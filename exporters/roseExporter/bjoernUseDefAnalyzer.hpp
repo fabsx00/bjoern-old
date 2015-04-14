@@ -33,8 +33,6 @@ using namespace bjoern;
 
 #define INVALID_ADDRESS (0)
 
-class MyProcessor;
-
 class BjoernUseDefAnalyzer{
 
 protected:
@@ -48,8 +46,7 @@ protected:
 	list<rose_addr_t> path;
 	map<uint64_t, BasicBlockSummary *> summaries;
 	rose_addr_t curBBAddress;
-
-	MyProcessor *processor;
+	BjoernFunctionNode *curFuncNode;
 
 	void initMemoryMap(const SgAsmGenericFile *asmFile);
 	void initDispatcher();
@@ -71,11 +68,14 @@ protected:
 	uint64_t edgeToId(Graph<SgAsmBlock*>::EdgeNode edge);
 	rose_addr_t getAddressForNode(Graph<SgAsmBlock*>::VertexNode node);
 
+	void registerTrace(void);
+	void registerStateOfBasicBlock(rose_addr_t addr);
+	void addSymbolsToFunctionNode(BasicBlockSummary *summary);
 
 public:
 	void init(const SgAsmGenericFile* asmFile);
-	void setProcessor(MyProcessor *proc);
-	void analyze(SgAsmFunction *func);
+	void analyze(SgAsmFunction *func,
+		     BjoernFunctionNode *bjoernFuncNode);
 
 };
 

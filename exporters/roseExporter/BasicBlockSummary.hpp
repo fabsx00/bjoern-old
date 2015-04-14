@@ -50,6 +50,11 @@ namespace bjoern {
 
 		void popState();
 
+		void getUsedRegisters(list<string> &out);
+		void getUsedMemory(list<string> &out);
+		void getDefinedRegisters(list<string> &out);
+		void getDefinedMemory(list<string> &out);
+
 		virtual ~BasicBlockSummary();
 	};
 

@@ -11,8 +11,7 @@
 #include "../common/bjoernNode.hpp"
 #include "bjoernInstructionNode.hpp"
 #include "bjoernBasicBlockNode.hpp"
+#include "bjoernSymbolNode.hpp"
 #include "bjoernFunctionNode.hpp"
-
-
 
 #endif

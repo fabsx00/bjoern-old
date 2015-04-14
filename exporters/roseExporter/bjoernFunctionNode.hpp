@@ -12,6 +12,7 @@ private:
 	string name;
 	list<BjoernBasicBlockNode *> basicBlocks;
 	map<string, BjoernBasicBlockNode *> addrToBB;
+	map<string, BjoernSymbolNode *> symbolToNode;
 public:
 
 	BjoernFunctionNode() : BjoernNode()
@@ -33,6 +34,13 @@ public:
 	{
 		basicBlocks.push_back(basicBlock);
 		addrToBB[basicBlock->getAddr()] = basicBlock;
+	}
+
+	void addSymbol(string &symbol)
+	{
+		// TODO
+		// only add symbol if it doesn't
+		// already exist in `symbolToNode`
 	}
 
 	BjoernBasicBlockNode *getBasicBlockByAddr(const string &addr)

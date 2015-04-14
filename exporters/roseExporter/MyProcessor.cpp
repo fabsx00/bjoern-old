@@ -6,7 +6,6 @@ void MyProcessor :: init(const SgAsmGenericFile* asmFile)
 {
 	writer.init();
 	useDefAnalyzer.init(asmFile);
-	useDefAnalyzer.setProcessor(this);
 }
 
 /**
@@ -27,9 +26,8 @@ void MyProcessor :: visitFunction(SgAsmFunction *func)
 {
 	BjoernFunctionNode *bjoernFunc = createBjoernFuncFromSgFunc(func);
 	curFunction = bjoernFunc;
+	useDefAnalyzer.analyze(func, bjoernFunc);
 	writer.writeFunction(bjoernFunc);
-	// this will call the writer internally
-	useDefAnalyzer.analyze(func);
 	delete bjoernFunc;
 }
 
@@ -139,27 +137,4 @@ BjoernInstructionNode * MyProcessor :: createBjoernInstructionFromSgInstruction(
 	instrNode->setAddr(instr->get_address());
 
 	return instrNode;
-}
-
-
-/** Handling of traces used for introducing USE/DEF information */
-
-void MyProcessor :: handleTrace(list<rose_addr_t> &path,
-				map<uint64_t, BasicBlockSummary *> & summaries)
-{
-	for(auto it : path){
-		handleBasicBlockAt(it, summaries);
-	}
-}
-
-void MyProcessor :: handleBasicBlockAt(rose_addr_t addr,
-				       map<uint64_t, BasicBlockSummary *> & summaries)
-{
-	stringstream s; s << addr;
-	BjoernBasicBlockNode *dstNode = curFunction->getBasicBlockByAddr(s.str());
-	cout<< dstNode << endl;
-
-	BasicBlockSummary *summary = summaries[addr];
-
-
 }
