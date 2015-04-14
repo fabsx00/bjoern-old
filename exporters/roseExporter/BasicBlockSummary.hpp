@@ -21,11 +21,11 @@ using namespace std;
 
 namespace bjoern {
 
-	class MemAndRegisterState{
-	private:
+	struct MemAndRegisterState{
+
 		BaseSemantics::StatePtr finalState;
 		BaseSemantics::StatePtr preCallState;
-	public:
+
 		MemAndRegisterState(BaseSemantics::StatePtr final,
 				    BaseSemantics::StatePtr pre):
 			finalState(final), preCallState(pre){}
@@ -40,7 +40,7 @@ namespace bjoern {
 			ENDS_IN_RET = 1 << 1
 		};
 
-		list<unique_ptr<MemAndRegisterState>> stateList;
+		list<MemAndRegisterState *> stateList;
 
 		uint32_t attributes;
 
@@ -54,6 +54,11 @@ namespace bjoern {
 		void getUsedMemory(list<string> &out);
 		void getDefinedRegisters(list<string> &out);
 		void getDefinedMemory(list<string> &out);
+
+		void walkRegisterStateList(list<string> &out,
+					   string (BasicBlockSummary::*lineToString)(string &));
+
+		string getDefinedRegisterFromLine(string &line);
 
 		virtual ~BasicBlockSummary();
 	};
