@@ -46,21 +46,9 @@ namespace bjoern {
 
 		BasicBlockSummary();
 		void pushState(BaseSemantics::StatePtr final,
-			       BaseSemantics::StatePtr preCall)
-		{
-			unique_ptr<MemAndRegisterState> ptr(new MemAndRegisterState(final, preCall));
-			stateList.push_back(move(ptr));
-		}
+			       BaseSemantics::StatePtr preCall);
 
-		void popState()
-		{
-			if(stateList.size() == 0){
-				cout << "This should not happen either" << endl;
-				return;
-			}
-
-			stateList.pop_back();
-		}
+		void popState();
 
 		virtual ~BasicBlockSummary();
 	};

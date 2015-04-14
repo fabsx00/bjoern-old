@@ -155,8 +155,11 @@ void MyProcessor :: handleTrace(list<rose_addr_t> &path,
 void MyProcessor :: handleBasicBlockAt(rose_addr_t addr,
 				       map<uint64_t, BasicBlockSummary *> & summaries)
 {
-	// We need the BjoernBasicBlock for the given address
 	stringstream s; s << addr;
 	BjoernBasicBlockNode *dstNode = curFunction->getBasicBlockByAddr(s.str());
 	cout<< dstNode << endl;
+
+	BasicBlockSummary *summary = summaries[addr];
+
+
 }
