@@ -1,6 +1,7 @@
 #include "MyProcessor.hpp"
 #include "bjoernUseDefAnalyzer.hpp"
 
+using namespace BinaryAnalysis :: InstructionSemantics2 :: BaseSemantics;
 
 void BjoernUseDefAnalyzer :: initMemoryMap(const SgAsmGenericFile *asmFile)
 {
@@ -249,7 +250,74 @@ void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUT
 void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr & thisState,
 						     BaseSemantics :: StatePtr & previousState)
 {
-// TODO
+	auto regState = dynamic_pointer_cast<RegisterStateGeneric>(thisState->get_register_state());
+	auto memState = dynamic_pointer_cast<MemoryCellList>(thisState->get_memory_state());
+
+	auto prevRegState = dynamic_pointer_cast<RegisterStateGeneric>(previousState->get_register_state());
+	auto prevMemState = dynamic_pointer_cast<MemoryCellList>(previousState->get_memory_state());
+
+	// This isn't too efficient. Maybe we can
+	// just create a new clean object without cloning
+
+	auto newState = thisState->clone();
+	newState->clear();
+	newState->clear_memory(); // not sure this is required
+
+
+	// Add registers
+
+	auto storedRegs = regState->get_stored_registers();
+	for(auto reg : storedRegs){
+		auto oldVal = prevRegState->readRegister(reg.desc, disp->get_operators().get() );
+		auto curVal = reg.value;
+		// add to newState if register differs
+		if(!oldVal->must_equal(curVal)){
+			newState->writeRegister(reg.desc, reg.value, disp->get_operators().get());
+		}
+	}
+
+	// Add memory
+
+	auto prevCellList = prevMemState->get_cells();
+	auto curCellList = memState->get_cells();
+
+	// According to the docs, the most recently added cells
+	// are at the beginning of the list. We can thus determine
+	// cells that have been newly created easily, these are the
+	// first n cells, where n is the difference in size between
+	// the new list and the original list.
+
+	int n = curCellList.size() - prevCellList.size();
+	assert(n >= 0 );
+
+
+	auto it = curCellList.begin();
+
+	for(; it != curCellList.end(); it++){
+		auto cell = *it;
+
+		if(n == 0) break;
+
+		// add newly created cells
+		newState->writeMemory(cell->get_address(), cell->get_value(), disp->get_operators().get(),
+				      disp->get_operators().get());
+
+		n--;
+	}
+
+	for(auto prevCell : prevCellList){
+		auto curCell = *it;
+
+		if(!curCell->get_value()->must_equal(prevCell->get_value()))
+			newState->writeMemory(curCell->get_address(), curCell->get_value(),
+					      disp->get_operators().get(),
+					      disp->get_operators().get());
+
+		assert(it != curCellList.end());
+		it++;
+	}
+
+	thisState = newState;
 }
 
 void BjoernUseDefAnalyzer :: removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock)
