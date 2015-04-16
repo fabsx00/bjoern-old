@@ -8,6 +8,9 @@
 #include "BasicBlockSummary.hpp"
 #include <utility>
 
+
+using namespace BinaryAnalysis :: InstructionSemantics2 :: BaseSemantics;
+
 namespace bjoern {
 
 	BasicBlockSummary::BasicBlockSummary() : attributes(ATTRIBUTES::NONE) {
@@ -35,7 +38,7 @@ namespace bjoern {
 		stateList.pop_back();
 	}
 
-	void BasicBlockSummary :: getUsedRegisters(list<string> &out)
+	void BasicBlockSummary :: getUsedForRegisters(list<string> &out)
 	{
 
 	}
@@ -47,32 +50,25 @@ namespace bjoern {
 
 	void BasicBlockSummary :: getDefinedRegisters(list<string> &out)
 	{
-		walkRegisterStateList(out, &BasicBlockSummary::getDefinedRegisterFromLine);
+		for(auto it : stateList){
+			auto finalState = it->finalState;
+			auto regState = finalState->get_register_state();
+			auto regDict = regState->get_register_dictionary();
+
+			auto ptr = dynamic_pointer_cast<RegisterStateGeneric>(regState);
+			auto storedRegs = ptr->get_stored_registers();
+
+			for(auto reg: storedRegs){
+				auto regName = regDict->lookup(reg.desc);
+				out.push_back(regName);
+			}
+		}
 	}
 
 
 	void BasicBlockSummary :: getDefinedMemory(list<string> &out)
 	{
-		// TODO
-	}
 
-	void BasicBlockSummary :: walkRegisterStateList(list<string> &out,
-			   string (BasicBlockSummary::*lineToString)(string &))
-	{
-		for(auto it : stateList){
-			auto finalState = it->finalState;
-			stringstream sstr;
-			finalState->get_register_state()->print(sstr);
-			string line;
-			while(getline(sstr, line) ){
-				out.push_back((this->*lineToString)(line));
-			}
-		}
-	}
-
-	string BasicBlockSummary :: getDefinedRegisterFromLine(string &line)
-	{
-		return line.substr(0, line.find(" "));
 	}
 
 } /* namespace bjoern */

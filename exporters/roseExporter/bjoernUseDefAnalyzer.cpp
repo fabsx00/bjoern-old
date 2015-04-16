@@ -145,7 +145,7 @@ void BjoernUseDefAnalyzer :: addSymbolsToFunctionNode(BasicBlockSummary *summary
 {
 	list<string> symbols;
 
-	summary->getUsedRegisters(symbols);
+	summary->getUsedForRegisters(symbols);
 	for(auto sym : symbols)
 		curFuncNode -> addSymbol(sym);
 	symbols.clear();
