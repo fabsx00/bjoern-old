@@ -282,6 +282,10 @@ void BjoernUseDefAnalyzer :: init(const SgAsmGenericFile* asmFile)
 void BjoernUseDefAnalyzer :: analyze(SgAsmFunction *func,
 				     BjoernFunctionNode *bjoernFuncNode)
 {
+
+	initDispatcher();
+	initTracePolicy();
+
 	Graph<SgAsmBlock*> cfg;
 	ControlFlow().build_block_cfg_from_ast(func, cfg);
 	curFuncNode = bjoernFuncNode;
