@@ -81,6 +81,17 @@ namespace bjoern {
 
 	void BasicBlockSummary :: getDefinedMemory(list<string> &out)
 	{
+		for(auto it : stateList){
+			auto finalState = it->finalState;
+			auto memState = finalState->get_memory_state();
+			auto ptr = dynamic_pointer_cast<MemoryCellList>(memState);
+			auto cells = ptr->get_cells();
+			for(auto cell : cells){
+				stringstream sstr;
+				sstr << *(cell->get_address());
+				out.push_back(sstr.str());
+			}
+		}
 
 	}
 
