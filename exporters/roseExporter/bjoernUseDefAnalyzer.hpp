@@ -61,7 +61,8 @@ protected:
 			BaseSemantics::DispatcherPtr disp);
 
 	void processBasicBlock(SgAsmBlock *basicBlock);
-	void updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes);
+	void updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes,
+				     BaseSemantics :: StatePtr & previousState);
 	void removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock);
 	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock);
 	void processInstruction(SgAsmInstruction *instr);
@@ -72,6 +73,9 @@ protected:
 	void registerStateOfBasicBlock(rose_addr_t addr);
 	void addSymbolsToFunctionNode(BasicBlockSummary *summary);
 	void connectBasicBlockToSymbols(BasicBlockSummary *summary, rose_addr_t addr);
+
+	void removeUnmodifiedEntries(BaseSemantics :: StatePtr & thisState,
+				     BaseSemantics :: StatePtr & previousState);
 
 public:
 	void init(const SgAsmGenericFile* asmFile);

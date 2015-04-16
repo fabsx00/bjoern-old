@@ -215,15 +215,17 @@ void BjoernUseDefAnalyzer :: connectBasicBlockToSymbols(BasicBlockSummary *summa
 
 void BjoernUseDefAnalyzer :: processBasicBlock(SgAsmBlock *basicBlock)
 {
+	auto previousState = disp->get_state()->clone();
 	auto attributes = processStatements(basicBlock);
-	updateBasicBlockSummary(attributes);
+	updateBasicBlockSummary(attributes, previousState);
 }
 
 
-void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes)
+void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUTES attributes,
+						     BaseSemantics :: StatePtr &previousState)
 {
 
-	// If a state does not exist for this block yet,
+	// If a summary does not exist for this block yet,
 	// create it.
 	if(summaries.find(curBBAddress) == summaries.end()){
 		summaries[curBBAddress] = new BasicBlockSummary;
@@ -237,7 +239,17 @@ void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUT
 		finalState = disp->get_state()->clone();
 	}
 
+
+	removeUnmodifiedEntries(preCallState, previousState);
+	removeUnmodifiedEntries(finalState, previousState);
+
 	summaries[curBBAddress]->pushState(finalState, preCallState);
+}
+
+void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr & thisState,
+						     BaseSemantics :: StatePtr & previousState)
+{
+// TODO
 }
 
 void BjoernUseDefAnalyzer :: removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock)
@@ -278,7 +290,7 @@ void BjoernUseDefAnalyzer :: processInstruction(SgAsmInstruction *instr)
 	try {
 		disp->processInstruction(instr);
 	}catch (BaseSemantics::Exception& e){
-		// Not alll instructions are supported.
+		// Not all instructions are supported.
 		// Just catch and return
 		return;
 	}
