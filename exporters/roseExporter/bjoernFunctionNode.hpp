@@ -51,6 +51,11 @@ public:
 
 	}
 
+	BjoernSymbolNode *getSymbolNodeByName(const string & name)
+	{
+		return symbolToNode[name];
+	}
+
 	BjoernBasicBlockNode *getBasicBlockByAddr(const string &addr)
 	{
 		auto it = addrToBB.find(addr);

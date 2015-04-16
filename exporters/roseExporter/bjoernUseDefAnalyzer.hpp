@@ -71,6 +71,7 @@ protected:
 	void registerTrace(void);
 	void registerStateOfBasicBlock(rose_addr_t addr);
 	void addSymbolsToFunctionNode(BasicBlockSummary *summary);
+	void connectBasicBlockToSymbols(BasicBlockSummary *summary, rose_addr_t addr);
 
 public:
 	void init(const SgAsmGenericFile* asmFile);

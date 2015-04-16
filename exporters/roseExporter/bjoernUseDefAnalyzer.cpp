@@ -139,6 +139,7 @@ void BjoernUseDefAnalyzer :: registerStateOfBasicBlock(rose_addr_t addr)
 {
 	BasicBlockSummary *summary = summaries[addr];
 	addSymbolsToFunctionNode(summary);
+	connectBasicBlockToSymbols(summary, addr);
 }
 
 void BjoernUseDefAnalyzer :: addSymbolsToFunctionNode(BasicBlockSummary *summary)
@@ -164,6 +165,44 @@ void BjoernUseDefAnalyzer :: addSymbolsToFunctionNode(BasicBlockSummary *summary
 	for(auto sym : symbols)
 		curFuncNode -> addSymbol(sym);
 	symbols.clear();
+}
+
+void BjoernUseDefAnalyzer :: connectBasicBlockToSymbols(BasicBlockSummary *summary,
+						       rose_addr_t addr)
+{
+	stringstream sstr;
+	sstr << addr;
+	BjoernBasicBlockNode *bb = curFuncNode->getBasicBlockByAddr(sstr.str());
+
+	list<string> symbols;
+	summary->getUsedForRegisters(symbols);
+	for(auto sym : symbols){
+		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
+		bb->addUsedSymbol(symbolNode);
+	}
+
+	symbols.clear();
+	summary->getDefinedRegisters(symbols);
+	for(auto sym : symbols){
+		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
+		bb->addDefinedSymbol(symbolNode);
+	}
+
+	symbols.clear();
+	summary->getUsedMemory(symbols);
+	for(auto sym : symbols){
+		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
+		bb->addUsedSymbol(symbolNode);
+	}
+
+	symbols.clear();
+	summary->getDefinedMemory(symbols);
+	for(auto sym : symbols){
+		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
+		bb->addDefinedSymbol(symbolNode);
+	}
+
+	bb->uniquifySymbols();
 }
 
 

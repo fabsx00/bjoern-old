@@ -224,8 +224,37 @@ void CSVWriter :: connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basic
 
 void CSVWriter :: connectBasicBlocksToSymbols(BjoernFunctionNode *func)
 {
-// TODO
+
+	const list<BjoernBasicBlockNode *> basicBlocks = func->getBasicBlocks();
+
+	// iterate over basic blocks
+
+	for(list<BjoernBasicBlockNode *> :: const_iterator it =  basicBlocks.begin();
+	    it != basicBlocks.end(); it++){
+		BjoernBasicBlockNode *basicBlock = *it;
+		connectBasicBlockToSymbols(basicBlock);
+	}
+
 }
+
+void CSVWriter :: connectBasicBlockToSymbols(BjoernBasicBlockNode *basicBlock)
+{
+	unsigned long srcId = basicBlock->getId();
+
+	auto symbols = basicBlock->getUsedSymbols();
+	for(auto symbolNode : symbols){
+		unsigned long long dstId = symbolNode->getId();
+		writeEdge(srcId, dstId, "USE");
+	}
+
+	symbols = basicBlock->getDefinedSymbols();
+	for(auto symbolNode : symbols){
+		unsigned long long dstId = symbolNode->getId();
+		writeEdge(srcId, dstId, "DEF");
+	}
+
+}
+
 
 void CSVWriter :: writeEdge(unsigned long long srcId, unsigned long long dstId,
 		const char *edgeType)

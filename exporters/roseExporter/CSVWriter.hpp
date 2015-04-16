@@ -53,6 +53,7 @@ private:
 	void connectBasicBlocksToInstructions(BjoernFunctionNode *func);
 	void connectBasicBlockToItsInstructions(BjoernBasicBlockNode *basicBlock);
 	void connectBasicBlocksToSymbols(BjoernFunctionNode *func);
+	void connectBasicBlockToSymbols(BjoernBasicBlockNode *basicBlock);
 
 	void writeEdge(unsigned long long srcId, unsigned long long dstId,
 		       const char *edgeType);

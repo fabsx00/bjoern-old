@@ -1,6 +1,8 @@
 #ifndef _BJOERN_BASIC_BLOCK_NODE_HPP
 #define _BJOERN_BASIC_BLOCK_NODE_HPP
 
+
+class BjoernSymbolNode;
 class BjoernFunctionNode;
 
 class BjoernBasicBlockNode : public BjoernNode {
@@ -8,6 +10,8 @@ private:
 	list<BjoernInstructionNode *> instructions;
 	list<uint64_t> successors;
 	BjoernFunctionNode *func;
+	list<BjoernSymbolNode *> usedSymbols;
+	list<BjoernSymbolNode *> definedSymbols;
 public:
 	BjoernBasicBlockNode() : BjoernNode()
 	{
@@ -33,7 +37,23 @@ public:
 	{
 		return func;
 	}
-	
+
+	void addUsedSymbol(BjoernSymbolNode *node)
+	{
+		usedSymbols.push_back(node);
+	}
+
+	void addDefinedSymbol(BjoernSymbolNode *node)
+	{
+		definedSymbols.push_back(node);
+	}
+
+	void uniquifySymbols()
+	{
+		usedSymbols.unique();
+		definedSymbols.unique();
+	}
+
 	void addInstruction(BjoernInstructionNode *node)
 	{
 		instructions.push_back(node);
@@ -42,6 +62,17 @@ public:
 	const list<BjoernInstructionNode *> & getInstructions()
 	{
 		return instructions;
+	}
+
+
+	const list<BjoernSymbolNode *> & getUsedSymbols()
+	{
+		return usedSymbols;
+	}
+
+	const list<BjoernSymbolNode *> & getDefinedSymbols()
+	{
+		return definedSymbols;
 	}
 
 	~BjoernBasicBlockNode()
