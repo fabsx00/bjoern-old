@@ -40,6 +40,19 @@ namespace bjoern {
 
 	void BasicBlockSummary :: getUsedForRegisters(list<string> &out)
 	{
+		for(auto it : stateList){
+			auto finalState = it->finalState;
+			auto regState = finalState->get_register_state();
+
+			auto ptr = dynamic_pointer_cast<RegisterStateGeneric>(regState);
+			auto storedRegs = ptr->get_stored_registers();
+
+			for(auto reg: storedRegs){
+				stringstream sstr;
+				sstr << *(reg.value);
+				out.push_back(sstr.str());
+			}
+		}
 
 	}
 
