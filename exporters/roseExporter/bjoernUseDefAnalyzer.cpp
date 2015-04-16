@@ -58,6 +58,11 @@ void BjoernUseDefAnalyzer :: traceCFG(const Graph<SgAsmBlock*>::VertexNode* entr
 	path.clear();
 	clearSummaries();
 	path.push_back(getAddressForNode(*entryNode));
+
+	// Debug message to verify that initial
+	// state is indeed 'empty'.
+	// cout << *(disp->get_state()) << endl;
+
 	traceCFG_r(entryNode, disp);
 }
 
@@ -85,7 +90,6 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 					BaseSemantics::DispatcherPtr disp)
 {
 	SgAsmBlock* bb = vertex->value();
-	unsigned int nEdgesExpanded = 0;
 	curBBAddress = path.back();
 
 	processBasicBlock(bb);
@@ -93,6 +97,7 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 	// Save state after basic block execution
 	auto stateAfterBB = disp->get_state();
 
+	unsigned int nEdgesExpanded = 0;
 	for (auto& edge : vertex->outEdges()) {
 
 		uint64_t edgeId = edgeToId(edge);
@@ -104,13 +109,14 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 		visited[edgeId] = true;
 		nEdgesExpanded ++;
 		auto targetVertex = *edge.target();
-
 		path.push_back(getAddressForNode(*vertex));
-		// Reset to state after basic block execution
+		// clone state so that modification is allowed
 		disp->get_operators()->set_state(stateAfterBB->clone());
-		traceCFG_r(&targetVertex, disp);
-		path.pop_back();
 
+		traceCFG_r(&targetVertex, disp);
+
+		disp->get_operators()->set_state(stateAfterBB);
+		path.pop_back();
 		// visited.erase(edgeId);
 	}
 
@@ -233,7 +239,7 @@ void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUT
 	}
 
 	auto preCallState = disp->get_state()->clone();
-	auto finalState = preCallState;
+	auto finalState = disp->get_state()->clone();
 
 	if(attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL){
 		tp->derivePostCallState(disp->get_state());
@@ -262,7 +268,8 @@ void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr &
 	auto newState = thisState->clone();
 	newState->clear();
 	newState->clear_memory(); // not sure this is required
-
+	assert(dynamic_pointer_cast<MemoryCellList>(newState->get_memory_state())->get_cells().size() == 0);
+	assert(dynamic_pointer_cast<RegisterStateGeneric>(newState->get_register_state())->get_stored_registers().size() == 0);
 
 	// Add registers
 

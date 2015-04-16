@@ -27,8 +27,12 @@ namespace bjoern {
 		BaseSemantics::StatePtr preCallState;
 
 		MemAndRegisterState(BaseSemantics::StatePtr final,
-				    BaseSemantics::StatePtr pre):
-			finalState(final), preCallState(pre){}
+				    BaseSemantics::StatePtr pre)
+		{
+			finalState = final->clone();
+			preCallState = pre->clone();
+		}
+
 
 	};
 
