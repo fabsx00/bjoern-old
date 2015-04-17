@@ -58,6 +58,7 @@ namespace bjoern {
 		void getUsedMemory(list<string> &out);
 		void getDefinedRegisters(list<string> &out);
 		void getDefinedMemory(list<string> &out);
+		bool isUntrackedRegister(string &regName);
 
 		virtual ~BasicBlockSummary();
 	};

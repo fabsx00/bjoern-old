@@ -57,7 +57,6 @@ void BjoernUseDefAnalyzer :: traceCFG(const Graph<SgAsmBlock*>::VertexNode* entr
 	visited.clear();
 	path.clear();
 	clearSummaries();
-	path.push_back(getAddressForNode(*entryNode));
 
 	// Debug message to verify that initial
 	// state is indeed 'empty'.
@@ -89,8 +88,10 @@ bool BjoernUseDefAnalyzer :: isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge
 void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* vertex,
 					BaseSemantics::DispatcherPtr disp)
 {
+	cout << "Enter" << endl;
+
 	SgAsmBlock* bb = vertex->value();
-	curBBAddress = path.back();
+	curBBAddress = getAddressForNode(*vertex);
 	processBasicBlock(bb);
 
 	// Save state after basic block execution
@@ -127,6 +128,9 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 
 	curBBAddress = path.back();
 	removeEntryInBasicBlockSummary(bb);
+
+	cout << "Leave" << endl;
+
 }
 
 void BjoernUseDefAnalyzer :: registerTrace()
@@ -218,14 +222,20 @@ void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUT
 	auto preCallState = disp->get_state()->clone();
 	auto finalState = disp->get_state()->clone();
 
-	if(attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL){
-		tp->derivePostCallState(disp->get_state());
-		finalState = disp->get_state()->clone();
-	}
+	// if(attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL){
+	//	tp->derivePostCallState(disp->get_state());
+	//	finalState = disp->get_state()->clone();
+	// }
 
+	// cout << *finalState << endl;
 
 	removeUnmodifiedEntries(preCallState, previousState);
 	removeUnmodifiedEntries(finalState, previousState);
+
+	cout << "After removal: " << endl;
+	cout << curBBAddress << endl;
+	cout << *finalState << endl;
+	cout << "================" << endl;
 
 	summaries[curBBAddress]->pushState(finalState, preCallState);
 }
@@ -245,6 +255,7 @@ void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr &
 	auto newState = thisState->clone();
 	newState->clear();
 	newState->clear_memory(); // not sure this is required
+
 	assert(dynamic_pointer_cast<MemoryCellList>(newState->get_memory_state())->get_cells().size() == 0);
 	assert(dynamic_pointer_cast<RegisterStateGeneric>(newState->get_register_state())->get_stored_registers().size() == 0);
 
@@ -254,6 +265,7 @@ void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr &
 	for(auto reg : storedRegs){
 		auto oldVal = prevRegState->readRegister(reg.desc, disp->get_operators().get() );
 		auto curVal = reg.value;
+
 		// add to newState if register differs
 		if(!oldVal->must_equal(curVal)){
 			newState->writeRegister(reg.desc, reg.value, disp->get_operators().get());

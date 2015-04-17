@@ -7,9 +7,10 @@
 
 #include "BasicBlockSummary.hpp"
 #include <utility>
-
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace BinaryAnalysis :: InstructionSemantics2 :: BaseSemantics;
+using namespace boost::algorithm;
 
 namespace bjoern {
 
@@ -43,11 +44,16 @@ namespace bjoern {
 		for(auto it : stateList){
 			auto finalState = it->finalState;
 			auto regState = finalState->get_register_state();
+			auto regDict = regState->get_register_dictionary();
 
 			auto ptr = dynamic_pointer_cast<RegisterStateGeneric>(regState);
 			auto storedRegs = ptr->get_stored_registers();
 
 			for(auto reg: storedRegs){
+				auto regName = regDict->lookup(reg.desc);
+				if(isUntrackedRegister(regName))
+					continue;
+
 				stringstream sstr;
 				sstr << *(reg.value);
 				out.push_back(sstr.str());
@@ -55,6 +61,8 @@ namespace bjoern {
 		}
 
 	}
+
+	/** This is actually 'memory used to change other memory' */
 
 	void BasicBlockSummary :: getUsedMemory(list<string> &out)
 	{
@@ -83,6 +91,9 @@ namespace bjoern {
 
 			for(auto reg: storedRegs){
 				auto regName = regDict->lookup(reg.desc);
+				if(isUntrackedRegister(regName))
+					continue;
+
 				out.push_back(regName);
 			}
 		}
@@ -103,5 +114,13 @@ namespace bjoern {
 			}
 		}
 	}
+
+	// Don't track eip/flags
+
+	bool BasicBlockSummary :: isUntrackedRegister(string &regName)
+	{
+		return (ends_with(regName, "f") || regName == "eip");
+	}
+
 
 } /* namespace bjoern */
