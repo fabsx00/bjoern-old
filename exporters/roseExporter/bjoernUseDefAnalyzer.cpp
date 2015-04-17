@@ -282,9 +282,21 @@ void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr &
 	// first n cells, where n is the difference in size between
 	// the new list and the original list.
 
-	int n = curCellList.size() - prevCellList.size();
-	assert(n >= 0 );
 
+	int n = curCellList.size() - prevCellList.size();
+	if(n < 0){
+
+		// State has changed completely, just take
+		// it as it is.
+
+		for(auto cell : curCellList){
+			newState->writeMemory(cell->get_address(), cell->get_value(), disp->get_operators().get(),
+					      disp->get_operators().get());
+		}
+		thisState = newState;
+		return;
+
+	}
 
 	auto it = curCellList.begin();
 
@@ -300,8 +312,12 @@ void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr &
 		n--;
 	}
 
+	// add cells that changed
+
 	for(auto prevCell : prevCellList){
 		auto curCell = *it;
+
+		assert(prevCell->get_address()->must_equal(curCell->get_address()));
 
 		if(!curCell->get_value()->must_equal(prevCell->get_value()))
 			newState->writeMemory(curCell->get_address(), curCell->get_value(),
