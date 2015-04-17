@@ -262,6 +262,11 @@ void BjoernUseDefAnalyzer :: removeUnmodifiedEntries(BaseSemantics :: StatePtr &
 
 	auto storedRegs = regState->get_stored_registers();
 	for(auto reg : storedRegs){
+
+		auto prevRegDict = prevRegState->get_register_dictionary();
+		auto regName = prevRegDict->lookup(reg.desc);
+		if(regName == "") continue;
+
 		auto oldVal = prevRegState->readRegister(reg.desc, disp->get_operators().get() );
 		auto curVal = reg.value;
 
