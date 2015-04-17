@@ -88,7 +88,6 @@ bool BjoernUseDefAnalyzer :: isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge
 void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* vertex,
 					BaseSemantics::DispatcherPtr disp)
 {
-	cout << "Enter" << endl;
 
 	SgAsmBlock* bb = vertex->value();
 	curBBAddress = getAddressForNode(*vertex);
@@ -126,10 +125,8 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 		registerTrace();
 	}
 
-	curBBAddress = path.back();
+	curBBAddress =  getAddressForNode(*vertex);
 	removeEntryInBasicBlockSummary(bb);
-
-	cout << "Leave" << endl;
 
 }
 
@@ -222,20 +219,20 @@ void BjoernUseDefAnalyzer :: updateBasicBlockSummary(BasicBlockSummary::ATTRIBUT
 	auto preCallState = disp->get_state()->clone();
 	auto finalState = disp->get_state()->clone();
 
-	// if(attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL){
-	//	tp->derivePostCallState(disp->get_state());
-	//	finalState = disp->get_state()->clone();
-	// }
+	if(attributes & BasicBlockSummary::ATTRIBUTES::ENDS_IN_CALL){
+		tp->derivePostCallState(disp->get_state());
+		finalState = disp->get_state()->clone();
+	}
 
 	// cout << *finalState << endl;
 
 	removeUnmodifiedEntries(preCallState, previousState);
 	removeUnmodifiedEntries(finalState, previousState);
 
-	cout << "After removal: " << endl;
-	cout << curBBAddress << endl;
-	cout << *finalState << endl;
-	cout << "================" << endl;
+	// cout << "After removal: " << endl;
+	// cout << curBBAddress << endl;
+	// cout << *finalState << endl;
+	// cout << "================" << endl;
 
 	summaries[curBBAddress]->pushState(finalState, preCallState);
 }
