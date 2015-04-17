@@ -122,7 +122,9 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 	if(nEdgesExpanded == 0){
 		// reached a node where no more edges
 		// were expandable.
+		path.push_back(getAddressForNode(*vertex));
 		registerTrace();
+		path.pop_back();
 	}
 
 	curBBAddress =  getAddressForNode(*vertex);
