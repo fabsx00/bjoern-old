@@ -50,7 +50,9 @@ public:
 
 	void uniquifySymbols()
 	{
+		usedSymbols.sort();
 		usedSymbols.unique();
+		definedSymbols.sort();
 		definedSymbols.unique();
 	}
 

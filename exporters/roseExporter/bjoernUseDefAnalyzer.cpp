@@ -91,7 +91,6 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 {
 	SgAsmBlock* bb = vertex->value();
 	curBBAddress = path.back();
-
 	processBasicBlock(bb);
 
 	// Save state after basic block execution
@@ -132,10 +131,6 @@ void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* ve
 
 void BjoernUseDefAnalyzer :: registerTrace()
 {
-	// path : current path
-	// summaries : BasicBlockSummaries
-	// curFuncNode: The node to write to
-
 	for(auto addr : path){
 		registerStateOfBasicBlock(addr);
 	}
@@ -154,24 +149,15 @@ void BjoernUseDefAnalyzer :: addSymbolsToFunctionNode(BasicBlockSummary *summary
 	list<string> symbols;
 
 	summary->getUsedForRegisters(symbols);
-	for(auto sym : symbols)
-		curFuncNode -> addSymbol(sym);
-	symbols.clear();
-
 	summary->getDefinedRegisters(symbols);
-	for(auto sym : symbols)
-		curFuncNode -> addSymbol(sym);
-	symbols.clear();
-
 	summary->getUsedMemory(symbols);
-	for(auto sym : symbols)
-		curFuncNode -> addSymbol(sym);
-	symbols.clear();
-
 	summary->getDefinedMemory(symbols);
+
+	symbols.sort();
+	symbols.unique();
+
 	for(auto sym : symbols)
 		curFuncNode -> addSymbol(sym);
-	symbols.clear();
 }
 
 void BjoernUseDefAnalyzer :: connectBasicBlockToSymbols(BasicBlockSummary *summary,
@@ -183,27 +169,18 @@ void BjoernUseDefAnalyzer :: connectBasicBlockToSymbols(BasicBlockSummary *summa
 
 	list<string> symbols;
 	summary->getUsedForRegisters(symbols);
-	for(auto sym : symbols){
-		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
-		bb->addUsedSymbol(symbolNode);
-	}
-
-	symbols.clear();
-	summary->getDefinedRegisters(symbols);
-	for(auto sym : symbols){
-		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
-		bb->addDefinedSymbol(symbolNode);
-	}
-
-	symbols.clear();
 	summary->getUsedMemory(symbols);
+
 	for(auto sym : symbols){
 		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
 		bb->addUsedSymbol(symbolNode);
 	}
 
 	symbols.clear();
+
+	summary->getDefinedRegisters(symbols);
 	summary->getDefinedMemory(symbols);
+
 	for(auto sym : symbols){
 		auto symbolNode = curFuncNode -> getSymbolNodeByName(sym);
 		bb->addDefinedSymbol(symbolNode);
