@@ -21,6 +21,15 @@ using namespace rose::BinaryAnalysis::InstructionSemantics2;
 using namespace boost::algorithm;
 using namespace std;
 
+// If rose is compiled with threading, this function
+// is not included by default. However, it needs to
+// be available.
+
+int
+RTS_mutex_init(RTS_mutex_t*, RTS_Layer, void*)
+{
+    return ENOSYS;
+}
 
 SgBinaryComposite *getBinary(SgProject *project)
 {
