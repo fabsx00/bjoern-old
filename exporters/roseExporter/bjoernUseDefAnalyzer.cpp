@@ -35,7 +35,8 @@ void BjoernUseDefAnalyzer ::initDispatcher()
 	dictReg = RegisterDictionary::dictionary_pentium4();
 	opsRisc = MyPartialSymbolicSemantics::RiscOperators::instance(dictReg);
 	opsRisc->set_memory_map(&memoryMap);
-	disp = DispatcherX86::instance(opsRisc);
+	disp = DispatcherX86::instance(opsRisc, 32);
+	// need to attach opsRis to disp
 }
 
 void BjoernUseDefAnalyzer :: initTracePolicy()
