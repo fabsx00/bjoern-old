@@ -52,12 +52,12 @@ protected:
 	void initDispatcher();
 	void initTracePolicy();
 
-	void traceCFG(const Graph<SgAsmBlock*>::VertexNode* entryNode);
+	void traceCFG(const Graph<SgAsmBlock*>::Vertex* entryNode);
 	void clearSummaries();
-	bool isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge,
+	bool isTerminatingEdge(Graph<SgAsmBlock*>::Edge edge,
 			       uint64_t edgeId);
 
-	void traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* vertex,
+	void traceCFG_r(const Graph<SgAsmBlock*>::Vertex* vertex,
 			BaseSemantics::DispatcherPtr disp);
 
 	void processBasicBlock(SgAsmBlock *basicBlock);
@@ -66,8 +66,8 @@ protected:
 	void removeEntryInBasicBlockSummary(SgAsmBlock *basicBlock);
 	BasicBlockSummary::ATTRIBUTES processStatements(SgAsmBlock *basicBlock);
 	void processInstruction(SgAsmInstruction *instr);
-	uint64_t edgeToId(Graph<SgAsmBlock*>::EdgeNode edge);
-	rose_addr_t getAddressForNode(Graph<SgAsmBlock*>::VertexNode node);
+	uint64_t edgeToId(Graph<SgAsmBlock*>::Edge edge);
+	rose_addr_t getAddressForNode(Graph<SgAsmBlock*>::Vertex node);
 
 	void registerTrace(void);
 	void registerStateOfBasicBlock(rose_addr_t addr);

@@ -52,7 +52,7 @@ void BjoernUseDefAnalyzer :: initTracePolicy()
   processed.
 */
 
-void BjoernUseDefAnalyzer :: traceCFG(const Graph<SgAsmBlock*>::VertexNode* entryNode)
+void BjoernUseDefAnalyzer :: traceCFG(const Graph<SgAsmBlock*>::Vertex* entryNode)
 {
 	visited.clear();
 	path.clear();
@@ -74,7 +74,7 @@ void BjoernUseDefAnalyzer ::clearSummaries()
 }
 
 
-bool BjoernUseDefAnalyzer :: isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge,
+bool BjoernUseDefAnalyzer :: isTerminatingEdge(Graph<SgAsmBlock*>::Edge edge,
 					       uint64_t edgeId)
 {
 	// has edge already been expanded?
@@ -85,7 +85,7 @@ bool BjoernUseDefAnalyzer :: isTerminatingEdge(Graph<SgAsmBlock*>::EdgeNode edge
 }
 
 
-void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::VertexNode* vertex,
+void BjoernUseDefAnalyzer :: traceCFG_r(const Graph<SgAsmBlock*>::Vertex* vertex,
 					BaseSemantics::DispatcherPtr disp)
 {
 
@@ -386,7 +386,7 @@ void BjoernUseDefAnalyzer :: processInstruction(SgAsmInstruction *instr)
    a source and a target, i.e., the CFG is not a multigraph.
 */
 
-uint64_t BjoernUseDefAnalyzer :: edgeToId(Graph<SgAsmBlock*>::EdgeNode edge)
+uint64_t BjoernUseDefAnalyzer :: edgeToId(Graph<SgAsmBlock*>::Edge edge)
 {
 	// we assume here that rose_addr_t is 32 bit
 	auto src_addr = getAddressForNode(*edge.source());
@@ -395,7 +395,7 @@ uint64_t BjoernUseDefAnalyzer :: edgeToId(Graph<SgAsmBlock*>::EdgeNode edge)
 }
 
 
-rose_addr_t BjoernUseDefAnalyzer :: getAddressForNode(Graph<SgAsmBlock*>::VertexNode node)
+rose_addr_t BjoernUseDefAnalyzer :: getAddressForNode(Graph<SgAsmBlock*>::Vertex node)
 {
 	return node.value()->get_address();
 }
