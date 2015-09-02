@@ -11,7 +11,7 @@ Install the following packages:
 
 	build-essential gcc-4.8 g++-4.8 flex bison libarchive-dev gcc-multilib
 	g++-multilib git gfortran libbz2-dev curl libpython-dev openjdk-7-jdk
-	zlib1g-dev automake autoconf libtool
+	zlib1g-dev automake autoconf libtool ghostscript
 
 Make sure gcc-4.8 is the default compiler:
 
