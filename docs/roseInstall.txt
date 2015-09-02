@@ -28,7 +28,7 @@ Install the Boost libraries:
 Debian stable comes with boost 1.55, but Rose requires a version of
 boost smaller than 1.54, e.g., boost 1.53.
 
-http://www.boost.org/users/history/version_153_0.html
+http://www.boost.org/users/history/version_1_53_0.html
 
 In your home directory:
 
